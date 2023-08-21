@@ -1,0 +1,11 @@
+.playerBlock {
+    display: flex;
+    align-items: center;
+}
+
+.playerName {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 160px;
+    white-space: nowrap;
+}

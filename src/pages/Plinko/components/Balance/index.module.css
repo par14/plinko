@@ -1,0 +1,7 @@
+.walletContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 3rem;
+    padding: 2rem;
+}

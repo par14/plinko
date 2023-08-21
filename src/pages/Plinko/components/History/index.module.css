@@ -1,0 +1,14 @@
+.historyWrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.approvedCell {
+    font-weight: bold !important;
+    color: #7dd87d !important;
+}
+
+.notApprovedCell {
+    font-weight: bold !important;
+    color: #f95959 !important;
+}

@@ -1,0 +1,10 @@
+.activeBallsWrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    right: 22%;
+    top: 18%;
+    font-weight: bold;
+}
