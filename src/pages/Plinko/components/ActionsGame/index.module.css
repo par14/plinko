@@ -1,19 +1,19 @@
 .actionsWrapper {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 .betWrapper {
-    position: relative;
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    margin-bottom: 1rem;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  margin-bottom: 1rem;
 }
 
 .inputBetWrapper {
-    display: flex;
-    flex-direction: row;
+  display: flex;
+  flex-direction: row;
 }

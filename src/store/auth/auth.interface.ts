@@ -1,13 +1,13 @@
 export interface User {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }
 
 export interface Wallet {
-  balance: number;
+  balance: number
 }
 
 export interface Auth {
-  user: User | null;
-  wallet: Wallet;
+  user: User | null
+  wallet: Wallet
 }

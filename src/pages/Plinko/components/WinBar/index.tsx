@@ -1,10 +1,11 @@
-import { useAppSelector } from "@store/hooks/store.hooks";
-import { selectLastWin } from "@store/config/config.selectors";
-import { Typography } from "@mui/material";
-import styles from "./index.module.css";
+import { Typography } from "@mui/material"
+import { selectLastWin } from "@store/config/config.selectors"
+import { useAppSelector } from "@store/hooks/store.hooks"
+
+import styles from "./index.module.css"
 
 export function WinBar() {
-  const lastWin = useAppSelector(selectLastWin);
+  const lastWin = useAppSelector(selectLastWin)
 
   return (
     <div className={styles.winWrapper}>
@@ -12,5 +13,5 @@ export function WinBar() {
         Last Win: {lastWin}
       </Typography>
     </div>
-  );
+  )
 }

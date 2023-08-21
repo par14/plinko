@@ -1,14 +1,14 @@
 export interface HistoryItem {
-  id: string,
-  bet: string,
-  payout: number,
-  time: string,
+  id: string
+  bet: string
+  payout: number
+  time: string
   win: number
 }
 
-export type StatisticItems =  { [key: number]: number} | null
+export type StatisticItems = { [key: number]: number } | null
 
 export type HistoryItems = {
-  items: HistoryItem[],
+  items: HistoryItem[]
   statisticItems: StatisticItems
 }

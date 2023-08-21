@@ -1,11 +1,15 @@
-import { Tooltip, Typography } from "@mui/material";
-import { useAppSelector } from "@store/hooks/store.hooks";
-import { selectCurrentUserId, selectCurrentUserName } from "@store/auth/auth.selectors";
-import styles from "./index.module.css";
+import { Tooltip, Typography } from "@mui/material"
+import {
+  selectCurrentUserId,
+  selectCurrentUserName,
+} from "@store/auth/auth.selectors"
+import { useAppSelector } from "@store/hooks/store.hooks"
+
+import styles from "./index.module.css"
 
 export function PlayerData() {
-  const userName = useAppSelector(selectCurrentUserName);
-  const userId = useAppSelector(selectCurrentUserId);
+  const userName = useAppSelector(selectCurrentUserName)
+  const userId = useAppSelector(selectCurrentUserId)
 
   return (
     <div className={styles.playerBlock}>
@@ -13,10 +17,15 @@ export function PlayerData() {
         Player:
       </Typography>
       <Tooltip title={`${userName}; GUID: ${userId}`}>
-        <Typography color="#feffdf" fontSize="30px" fontWeight="600" className={styles.playerName}>
+        <Typography
+          color="#feffdf"
+          fontSize="30px"
+          fontWeight="600"
+          className={styles.playerName}
+        >
           {userName}
         </Typography>
       </Tooltip>
     </div>
-  );
+  )
 }

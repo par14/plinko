@@ -1,9 +1,10 @@
-import { BrowserRouter, Route, Routes as Switch } from "react-router-dom";
-import { LoginPage } from "@pages/Login";
-import { PlinkoGamePage } from "@pages/Plinko";
-import { NotFound } from "@pages/NotFound";
-import { AuthGuard } from "@store/auth/auth.guard";
-import { Layout } from "../layout";
+import { LoginPage } from "@pages/Login"
+import { NotFound } from "@pages/NotFound"
+import { PlinkoGamePage } from "@pages/Plinko"
+import { AuthGuard } from "@store/auth/auth.guard"
+import { BrowserRouter, Route, Routes as Switch } from "react-router-dom"
+
+import { Layout } from "../layout"
 
 export function Routes() {
   return (
@@ -18,5 +19,5 @@ export function Routes() {
         </Route>
       </Switch>
     </BrowserRouter>
-  );
+  )
 }

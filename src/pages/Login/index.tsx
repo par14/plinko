@@ -1,38 +1,39 @@
-import type { ChangeEvent } from "react";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button, TextField } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@store/hooks/store.hooks";
-import { selectCurrentUserId } from "@store/auth/auth.selectors";
-import { setBalance, signIn } from "@store/auth/auth.slice";
-import styles from "./index.module.css";
+import { Button, TextField } from "@mui/material"
+import { selectCurrentUserId } from "@store/auth/auth.selectors"
+import { setBalance, signIn } from "@store/auth/auth.slice"
+import { useAppDispatch, useAppSelector } from "@store/hooks/store.hooks"
+import type { ChangeEvent } from "react"
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+
+import styles from "./index.module.css"
 
 export function LoginPage() {
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const userId = useAppSelector(selectCurrentUserId);
+  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const userId = useAppSelector(selectCurrentUserId)
 
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState("");
+  const [name, setName] = useState("")
+  const [amount, setAmount] = useState("")
 
   useEffect(() => {
     if (userId) {
-      navigate("/plinko");
+      navigate("/plinko")
     }
-  }, [userId]);
+  }, [userId])
 
   const onChangeName = (e: ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value.trim());
-  };
+    setName(e.target.value.trim())
+  }
 
   const onChangeAmount = (e: ChangeEvent<HTMLInputElement>) => {
-    setAmount(e.target.value);
-  };
+    setAmount(e.target.value)
+  }
 
   const onSubmitName = () => {
-    dispatch(signIn({ name }));
-    dispatch(setBalance(amount));
-  };
+    dispatch(signIn({ name }))
+    dispatch(setBalance(amount))
+  }
 
   return (
     <div className={styles.login}>
@@ -54,10 +55,15 @@ export function LoginPage() {
           onChange={onChangeAmount}
           label="Balance"
         />
-        <Button type="submit" onClick={onSubmitName} variant="outlined" disabled={name === "" || +amount <= 0}>
-          Let's go
+        <Button
+          type="submit"
+          onClick={onSubmitName}
+          variant="outlined"
+          disabled={name === "" || +amount <= 0}
+        >
+          Let&apos;s go
         </Button>
       </div>
     </div>
-  );
+  )
 }

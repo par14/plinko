@@ -1,14 +1,14 @@
 .linesWrapper {
-    display: flex;
-    position: absolute;
-    right: 18%;
-    top: 18%;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
+  display: flex;
+  position: absolute;
+  right: 18%;
+  top: 18%;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
 }
 
 .linesGroup {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }

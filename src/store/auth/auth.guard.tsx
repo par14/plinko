@@ -1,19 +1,20 @@
-import { Outlet, useNavigate } from "react-router-dom";
-import { useAppSelector } from "../hooks/store.hooks";
-import { selectCurrentUserId } from "./auth.selectors";
-import { useEffect } from "react";
+import { useEffect } from "react"
+import { Outlet, useNavigate } from "react-router-dom"
+
+import { useAppSelector } from "../hooks/store.hooks"
+import { selectCurrentUserId } from "./auth.selectors"
 
 export function AuthGuard() {
-  const navigate = useNavigate();
-  const userId = useAppSelector(selectCurrentUserId);
+  const navigate = useNavigate()
+  const userId = useAppSelector(selectCurrentUserId)
 
   useEffect(() => {
     if (!userId) {
-      navigate("/");
+      navigate("/")
     }
-  }, [userId]);
+  }, [userId])
 
   if (userId) {
-    return <Outlet />;
+    return <Outlet />
   }
 }

@@ -1,4 +1,3 @@
-import type { HolesForLines } from "@pages/Plinko/components/Game/interfaces";
 import {
   holesFor10Lines,
   holesFor11Lines,
@@ -8,8 +7,9 @@ import {
   holesFor15Lines,
   holesFor16Lines,
   holesFor8Lines,
-  holesFor9Lines
-} from "@pages/Plinko/components/Game/constants/holesForLines";
+  holesFor9Lines,
+} from "@pages/Plinko/components/Game/constants/holesForLines"
+import type { HolesForLines } from "@pages/Plinko/components/Game/interfaces"
 
 export const holes: {
   [key: number]: HolesForLines
@@ -22,5 +22,5 @@ export const holes: {
   13: holesFor13Lines,
   14: holesFor14Lines,
   15: holesFor15Lines,
-  16: holesFor16Lines
-};
+  16: holesFor16Lines,
+}

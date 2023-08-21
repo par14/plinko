@@ -6,10 +6,8 @@
   "extends": [
     "plugin:react/recommended",
     "standard",
-    "prettier",
     "plugin:@typescript-eslint/recommended",
-    "plugin:import/warnings",
-    "plugin:import/errors"
+    "prettier"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -44,15 +42,7 @@
       {
         // example configuration
         "newlinesBetween": "always",
-        "groups": [
-          "module",
-          "/^@shared/",
-          [
-            "parent",
-            "sibling",
-            "index"
-          ]
-        ],
+        "groups": ["module", "/^@shared/", ["parent", "sibling", "index"]],
         "alphabetize": {
           "order": "asc",
           "ignoreCase": true
@@ -63,25 +53,10 @@
   },
   "settings": {
     "import/parsers": {
-      "@typescript-eslint/parser": [
-        ".ts",
-        ".tsx"
-      ]
+      "@typescript-eslint/parser": [".ts", ".tsx"]
     },
     "react": {
       "version": "detect"
-    },
-    "import/resolver": {
-      "node": {
-        "extensions": [
-          ".ts",
-          ".tsx"
-        ]
-      },
-      "typescript": {
-        "alwaysTryTypes": true,
-        "project": "./tsconfig.json"
-      }
     }
   }
 }

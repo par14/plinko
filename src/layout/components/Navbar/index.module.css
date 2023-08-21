@@ -1,24 +1,24 @@
 .nav {
-    position: sticky;
-    top: 0;
-    z-index: 50;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .wrapper {
-    display: flex;
-    width: 100%;
-    justify-content: center;
-    margin-left: auto;
-    margin-right: auto;
-    height: 1rem;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+  height: 1rem;
 }
 
 .playerWrapper {
-    position: absolute;
-    right: 14%;
-    top: 1.5rem;
-    gap: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
+  position: absolute;
+  right: 14%;
+  top: 1.5rem;
+  gap: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }

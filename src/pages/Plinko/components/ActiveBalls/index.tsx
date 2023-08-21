@@ -1,11 +1,12 @@
-import { Typography } from "@mui/material";
-import { useAppSelector } from "@store/hooks/store.hooks";
-import { selectActiveBalls } from "@store/config/config.selectors";
-import { MAX_ACTIVE_BALLS } from "@pages/Plinko/components/Game/config";
-import styles from "./index.module.css";
+import { Typography } from "@mui/material"
+import { MAX_ACTIVE_BALLS } from "@pages/Plinko/components/Game/config"
+import { selectActiveBalls } from "@store/config/config.selectors"
+import { useAppSelector } from "@store/hooks/store.hooks"
+
+import styles from "./index.module.css"
 
 export function ActiveBalls() {
-  const activeBalls = useAppSelector(selectActiveBalls);
+  const activeBalls = useAppSelector(selectActiveBalls)
 
   return (
     <div className={styles.activeBallsWrapper}>
@@ -16,5 +17,5 @@ export function ActiveBalls() {
         {activeBalls}/{MAX_ACTIVE_BALLS}
       </Typography>
     </div>
-  );
+  )
 }

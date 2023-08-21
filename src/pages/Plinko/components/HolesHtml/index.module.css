@@ -1,19 +1,19 @@
 .linesWrapper {
-    display: flex;
-    position: absolute;
-    width: 100%;
-    align-items: center;
-    justify-content: flex-start;
-    flex-direction: row;
+  display: flex;
+  position: absolute;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: row;
 }
 
 .holeHtml {
-    position: relative;
-    display: flex;
-    text-align: center;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    cursor: pointer;
-    border-radius: 5px;
+  position: relative;
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
 }
