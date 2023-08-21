@@ -131,11 +131,11 @@ export function Game() {
       playSong(ballSound);
 
       const ballColor = ballValue <= 0 ? canvasColors.ballInactive : canvasColors.ballActive;
-      const ball = Bodies.circle(MAX_WORLD_WIDTH / 2 + random(-3, 3), DISTANCE_FROM_TOP_FLOOR, configSizes.ballSize, {
+      const ball = Bodies.circle(MAX_WORLD_WIDTH / 2 + random(-2, 2), DISTANCE_FROM_TOP_FLOOR, configSizes.ballSize, {
         label: `ball-${ballValue}`,
         id: new Date().getTime(),
         restitution: 0.8,
-        friction: 0.1,
+        friction: 0.3,
         frictionAir: 0.03,
         collisionFilter: {
           group: -1

@@ -5,7 +5,7 @@ import type { RiskModes } from "@store/config/config.interface";
 export const INITIAL_SIZES_FOR_8_LINES: SizeConfig = {
   pinSize: 4.5,
   pinGap: 45,
-  ballSize: 13
+  ballSize: 13.4
 };
 
 export const canvasColors = {
