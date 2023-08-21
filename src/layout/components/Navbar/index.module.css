@@ -15,8 +15,8 @@
 
 .playerWrapper {
   position: absolute;
-  right: 14%;
-  top: 1.5rem;
+  right: 10%;
+  top: 1rem;
   gap: 2rem;
   display: flex;
   align-items: center;
