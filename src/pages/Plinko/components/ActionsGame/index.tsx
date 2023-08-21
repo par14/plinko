@@ -56,24 +56,24 @@ export function ActionsGame() {
         <Typography
           color="white"
           fontWeight="600"
-          fontSize="24px"
-          marginRight="1rem"
+          fontSize="20px"
+          marginRight="8px"
         >
-          Bet:
+          Current Bet:
         </Typography>
-        <Typography color="white" fontWeight="600" fontSize="24px">
+        <Typography color="white" fontWeight="600" fontSize="20px">
           {betValue}
         </Typography>
       </div>
       <div className={styles.inputBetWrapper}>
         <NumericFormat
           InputProps={{
-            className: styles.numericInput,
             sx: {
               color: "#e7eaf6",
               fontWeight: 600,
-              fontSize: "25px",
-              borderColor: "white",
+              height: "50px",
+              fontSize: "20px",
+              backgroundColor: "#132743",
             },
           }}
           value={betValue}
@@ -88,11 +88,9 @@ export function ActionsGame() {
           <Button
             aria-label="choose active for bet"
             sx={{
-              padding: "4px",
-              marginLeft: "8px",
-              paddingLeft: "4px",
-              paddingRight: "4px",
-              fontSize: "18px",
+              padding: "2px",
+              marginLeft: "4px",
+              fontSize: "14px",
               color: "white",
               fontWeight: 600,
               backgroundColor: "#132743",

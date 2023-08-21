@@ -46,6 +46,7 @@ export function PlayAction({ run }: PlayProps) {
           variant="outlined"
           sx={{
             fontSize: "25px",
+            marginTop: "1rem",
             borderRadius: "10px",
             width: "150px",
             backgroundColor: "#faf5e4",
