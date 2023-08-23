@@ -41,7 +41,6 @@ import {
   DISTANCE_FROM_TOP_FLOOR,
   INITIAL_SIZES_FOR_8_LINES,
   MAX_ACTIVE_BALLS,
-  MAX_WORLD_HEIGHT,
   MAX_WORLD_WIDTH,
   START_PINS,
 } from "./config"
@@ -53,6 +52,7 @@ export function Game() {
   const riskMode = useAppSelector(selectRiskMode)
   const dispatch = useAppDispatch()
   const [configSizes, setConfigSizes] = useState(INITIAL_SIZES_FOR_8_LINES)
+  const sizeCanvas = MAX_WORLD_WIDTH
 
   const engine = Engine.create()
 
@@ -68,17 +68,17 @@ export function Game() {
       element: element!,
       bounds: {
         max: {
-          y: MAX_WORLD_HEIGHT,
-          x: MAX_WORLD_WIDTH,
+          x: sizeCanvas,
+          y: sizeCanvas,
         },
         min: {
-          y: 0,
           x: 0,
+          y: 0,
         },
       },
       options: {
-        width: MAX_WORLD_WIDTH,
-        height: MAX_WORLD_HEIGHT,
+        width: sizeCanvas,
+        height: sizeCanvas,
         background: canvasColors.background,
         hasBounds: true,
         wireframes: false,
@@ -109,7 +109,7 @@ export function Game() {
 
     for (let i = 0; i < linePins; i++) {
       const pinX =
-        MAX_WORLD_WIDTH / 2 -
+        sizeCanvas / 2 -
         lineWidth / 2 +
         i * configSizes.pinGap +
         configSizes.pinGap / 2
@@ -155,7 +155,7 @@ export function Game() {
       const ballColor =
         ballValue <= 0 ? canvasColors.ballInactive : canvasColors.ballActive
       const ball = Bodies.circle(
-        MAX_WORLD_WIDTH / 2 + random(-15, 15),
+        sizeCanvas / 2 + random(-15, 15),
         DISTANCE_FROM_TOP_FLOOR,
         configSizes.ballSize,
         {
@@ -179,7 +179,7 @@ export function Game() {
   )
 
   const initPosition = Bodies.circle(
-    MAX_WORLD_WIDTH / 2,
+    sizeCanvas / 2,
     DISTANCE_FROM_TOP_FLOOR,
     configSizes.ballSize,
     {
@@ -194,32 +194,28 @@ export function Game() {
   )
 
   const leftWall = Bodies.rectangle(
-    linesCount < 12
-      ? MAX_WORLD_WIDTH / 2 - configSizes.pinSize * 2
-      : MAX_WORLD_WIDTH / 2,
+    linesCount < 12 ? sizeCanvas / 2 - configSizes.pinSize * 2 : sizeCanvas / 2,
     0,
-    MAX_WORLD_WIDTH * 2,
+    sizeCanvas * 2,
     20,
     {
       angle: 90,
       render: {
-        visible: false,
+        visible: true,
       },
       isStatic: true,
     },
   )
 
   const rightWall = Bodies.rectangle(
-    linesCount < 12
-      ? MAX_WORLD_WIDTH / 2 + configSizes.pinSize * 2
-      : MAX_WORLD_WIDTH / 2,
+    linesCount < 12 ? sizeCanvas / 2 + configSizes.pinSize * 2 : sizeCanvas / 2,
     0,
-    MAX_WORLD_WIDTH * 2,
+    sizeCanvas * 2,
     20,
     {
       angle: -90,
       render: {
-        visible: false,
+        visible: true,
       },
       isStatic: true,
     },
@@ -228,9 +224,7 @@ export function Game() {
   const holes = getHolesByLine(linesCount, riskMode)
   const holesBodies: Body[] = []
   let firstHolePositionX: number =
-    MAX_WORLD_WIDTH / 2 -
-    (configSizes.pinGap / 2) * linesCount -
-    configSizes.pinGap
+    sizeCanvas / 2 - (configSizes.pinGap / 2) * linesCount - configSizes.pinGap
 
   holes.forEach((hole) => {
     const blockSize = configSizes.pinGap - configSizes.pinSize * 2 // height and width

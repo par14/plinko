@@ -6,3 +6,21 @@
   height: 100%;
   gap: 6rem;
 }
+
+
+@media screen and (max-width: 1350px) {
+  .game {
+    flex-direction: column-reverse;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .playerWrapper {
+    right: 0;
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.5rem;
+    position: relative;
+  }
+}

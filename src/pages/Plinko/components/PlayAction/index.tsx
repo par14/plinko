@@ -35,14 +35,16 @@ export function PlayAction({ run }: PlayProps) {
   }
 
   return (
-    <Tooltip title={bet === 0 ? "Please type bet higher than 0" : ""}>
+    <Tooltip
+      title={bet <= 0 || balance === 0 ? "Please type bet higher than 0" : ""}
+    >
       <span>
         <Button
           type="button"
           disableFocusRipple
           aria-label="Play"
           onClick={onRun}
-          disabled={bet === 0}
+          disabled={bet <= 0 || balance === 0}
           variant="outlined"
           sx={{
             fontSize: "25px",

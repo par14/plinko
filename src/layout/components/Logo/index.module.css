@@ -1,9 +1,7 @@
 .logoWrapper {
   display: flex;
-  margin-top: 1rem;
   justify-content: center;
   width: 100%;
-  z-index: 1;
 }
 
 .logoImg {

@@ -17,3 +17,28 @@
   display: flex;
   flex-direction: row;
 }
+
+.actionsItems {
+  display: flex;
+  flex-direction: row;
+}
+
+
+@media screen and (max-width: 700px) {
+  .betWrapper {
+    margin-top: 2rem;
+    justify-content: center;
+  }
+
+  .inputBetWrapper {
+    width: 100%;
+    flex-direction: column;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  .actionsItems {
+    height: 3rem;
+    padding: 0 1rem;
+  }
+}

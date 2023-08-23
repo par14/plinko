@@ -84,27 +84,29 @@ export function ActionsGame() {
           variant="outlined"
           disabled={activeBalls > 0}
         />
-        {ACTIONS_OPTIONS.map((action, i) => (
-          <Button
-            aria-label="choose active for bet"
-            sx={{
-              padding: "2px",
-              marginLeft: "4px",
-              fontSize: "14px",
-              color: "white",
-              fontWeight: 600,
-              backgroundColor: "#132743",
-              ":hover": { backgroundColor: "#5c5470" },
-              ":disabled": { color: "rgba(0, 0, 0, 0.5)" },
-            }}
-            key={i}
-            disabled={activeBalls > 0}
-            type="button"
-            onClick={() => changeBetViaAction(action)}
-          >
-            {action.label}
-          </Button>
-        ))}
+        <div className={styles.actionsItems}>
+          {ACTIONS_OPTIONS.map((action, i) => (
+            <Button
+              aria-label="choose active for bet"
+              sx={{
+                padding: "2px",
+                marginLeft: "4px",
+                fontSize: "14px",
+                color: "white",
+                fontWeight: 600,
+                backgroundColor: "#132743",
+                ":hover": { backgroundColor: "#5c5470" },
+                ":disabled": { color: "rgba(0, 0, 0, 0.5)" },
+              }}
+              key={i}
+              disabled={activeBalls > 0}
+              type="button"
+              onClick={() => changeBetViaAction(action)}
+            >
+              {action.label}
+            </Button>
+          ))}
+        </div>
       </div>
     </div>
   )

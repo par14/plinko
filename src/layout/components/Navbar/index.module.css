@@ -1,24 +1,32 @@
 .nav {
   position: sticky;
-  top: 0;
-  z-index: 50;
-}
-
-.wrapper {
   display: flex;
-  width: 100%;
   justify-content: center;
-  margin-left: auto;
-  margin-right: auto;
-  height: 1rem;
+  align-items: center;
+  z-index: 50;
+  padding: 1rem 2rem;
 }
 
 .playerWrapper {
   position: absolute;
-  right: 10%;
-  top: 1rem;
   gap: 2rem;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  right: 2rem;
+  z-index: 1;
+}
+
+@media screen and (max-width: 800px) {
+  .nav {
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .playerWrapper {
+    right: 0;
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.5rem;
+    position: relative;
+  }
 }
