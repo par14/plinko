@@ -1,7 +1,6 @@
-.linesWrapper {
+.holesWrapper {
   display: flex;
   position: absolute;
-  width: 100%;
   align-items: center;
   justify-content: flex-start;
   flex-direction: row;
@@ -15,5 +14,5 @@
   justify-content: center;
   font-weight: bold;
   cursor: pointer;
-  border-radius: 5px;
+  border-radius: 2px;
 }

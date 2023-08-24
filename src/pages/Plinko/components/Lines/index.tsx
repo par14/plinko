@@ -9,10 +9,12 @@ import {
 import { setLinesCount } from "@store/config/config.slice"
 import { clearStatistics } from "@store/history/history.slice"
 import { useAppDispatch, useAppSelector } from "@store/hooks/store.hooks"
+import { useMediaQuery } from "usehooks-ts"
 
 import styles from "./index.module.css"
 
 export function Lines() {
+  const matches = useMediaQuery("(max-width: 535px)")
   const linesCount = useAppSelector(selectLinesCount)
   const activeBalls = useAppSelector(selectActiveBalls)
   const userId = useAppSelector(selectCurrentUserId)
@@ -27,7 +29,11 @@ export function Lines() {
 
   return (
     <div className={styles.linesWrapper}>
-      <Typography color="#ffc93c" fontSize="16px" fontWeight="bold">
+      <Typography
+        color="#ffc93c"
+        fontSize={matches ? "12px" : "16px"}
+        fontWeight="bold"
+      >
         Lines
       </Typography>
       <div className={styles.linesGroup}>
@@ -35,9 +41,9 @@ export function Lines() {
           <Button
             aria-label="choose line"
             sx={{
-              minWidth: "60px",
+              minWidth: matches ? "48px" : "60px",
               padding: 0,
-              fontSize: "18px",
+              fontSize: matches ? "14px" : "18px",
               color: "white",
               fontWeight: 600,
               backgroundColor: linesCount === line ? "#9fd3c7" : "",

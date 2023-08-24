@@ -1,20 +1,19 @@
-import {
-  ACTIVE_AREA_HEIGHT,
-  INITIAL_SIZES_FOR_8_LINES,
-} from "@pages/Plinko/components/Game/config"
 import type {
   LinesType,
   SizeConfig,
 } from "@pages/Plinko/components/Game/interfaces"
 
-export const getRateForLine = (line: LinesType): SizeConfig => {
-  const { pinGap, pinSize, ballSize } = INITIAL_SIZES_FOR_8_LINES
-  const widthBetweenLine = ACTIVE_AREA_HEIGHT / (line + 1)
-  const rate = pinGap / widthBetweenLine
+export const getRateForLine = (
+  config: SizeConfig,
+  line: LinesType,
+): SizeConfig => {
+  const widthBetweenLine = config.activePlinkoHeight / (line + 1)
+  const rate = config.pinGap / widthBetweenLine
 
   return {
-    pinGap: pinGap / rate,
-    pinSize: pinSize / rate,
-    ballSize: ballSize / rate,
+    ...config,
+    pinGap: config.pinGap / rate,
+    pinSize: config.pinSize / rate,
+    ballSize: config.ballSize / rate,
   }
 }

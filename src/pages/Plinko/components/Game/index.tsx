@@ -33,32 +33,38 @@ import { format } from "date-fns"
 import type { IEventCollision } from "matter-js"
 import { Bodies, Body, Engine, Events, Render, Runner, World } from "matter-js"
 import { useCallback, useEffect, useState } from "react"
+import { useMediaQuery } from "usehooks-ts"
 import { v4 as uuidv4 } from "uuid"
 
 import {
-  ACTIVE_AREA_HEIGHT,
   canvasColors,
-  DISTANCE_FROM_TOP_FLOOR,
+  INITIAL_MOBILE_SIZES_FOR_8_LINES,
   INITIAL_SIZES_FOR_8_LINES,
   MAX_ACTIVE_BALLS,
-  MAX_WORLD_WIDTH,
   START_PINS,
 } from "./config"
 import styles from "./index.module.css"
 
 export function Game() {
+  const matches = useMediaQuery("(max-width: 535px)")
   const activeBalls = useAppSelector(selectActiveBalls)
   const linesCount = useAppSelector(selectLinesCount)
   const riskMode = useAppSelector(selectRiskMode)
   const dispatch = useAppDispatch()
-  const [configSizes, setConfigSizes] = useState(INITIAL_SIZES_FOR_8_LINES)
-  const sizeCanvas = MAX_WORLD_WIDTH
-
+  const [configSizes, setConfigSizes] = useState(
+    matches ? INITIAL_MOBILE_SIZES_FOR_8_LINES : INITIAL_SIZES_FOR_8_LINES,
+  )
   const engine = Engine.create()
 
   useEffect(() => {
-    setConfigSizes(getRateForLine(linesCount))
-  }, [linesCount, riskMode])
+    console.log("HERE RENDER GAME")
+    setConfigSizes(
+      getRateForLine(
+        matches ? INITIAL_MOBILE_SIZES_FOR_8_LINES : INITIAL_SIZES_FOR_8_LINES,
+        linesCount,
+      ),
+    )
+  }, [linesCount, riskMode, matches])
 
   useEffect(() => {
     engine.gravity.y = 1.0
@@ -68,8 +74,8 @@ export function Game() {
       element: element!,
       bounds: {
         max: {
-          x: sizeCanvas,
-          y: sizeCanvas,
+          x: configSizes.canvasSize,
+          y: configSizes.canvasSize,
         },
         min: {
           x: 0,
@@ -77,8 +83,8 @@ export function Game() {
         },
       },
       options: {
-        width: sizeCanvas,
-        height: sizeCanvas,
+        width: configSizes.canvasSize,
+        height: configSizes.canvasSize,
         background: canvasColors.background,
         hasBounds: true,
         wireframes: false,
@@ -109,15 +115,15 @@ export function Game() {
 
     for (let i = 0; i < linePins; i++) {
       const pinX =
-        sizeCanvas / 2 -
+        configSizes.canvasSize / 2 -
         lineWidth / 2 +
         i * configSizes.pinGap +
         configSizes.pinGap / 2
 
       const pinY =
-        ACTIVE_AREA_HEIGHT / linesCount +
+        configSizes.activePlinkoHeight / linesCount +
         l * configSizes.pinGap +
-        DISTANCE_FROM_TOP_FLOOR
+        configSizes.distanceFromTop
 
       const pin = Bodies.circle(pinX, pinY, configSizes.pinSize, {
         label: `pin-${i}`,
@@ -155,8 +161,8 @@ export function Game() {
       const ballColor =
         ballValue <= 0 ? canvasColors.ballInactive : canvasColors.ballActive
       const ball = Bodies.circle(
-        sizeCanvas / 2 + random(-15, 15),
-        DISTANCE_FROM_TOP_FLOOR,
+        configSizes.canvasSize / 2 + random(-15, 15),
+        configSizes.distanceFromTop,
         configSizes.ballSize,
         {
           label: `ball-${ballValue}`,
@@ -179,8 +185,8 @@ export function Game() {
   )
 
   const initPosition = Bodies.circle(
-    sizeCanvas / 2,
-    DISTANCE_FROM_TOP_FLOOR,
+    configSizes.canvasSize / 2,
+    configSizes.distanceFromTop,
     configSizes.ballSize,
     {
       label: `ballHole`,
@@ -194,28 +200,28 @@ export function Game() {
   )
 
   const leftWall = Bodies.rectangle(
-    linesCount < 12 ? sizeCanvas / 2 - configSizes.pinSize * 2 : sizeCanvas / 2,
+    configSizes.canvasSize / 2 - configSizes.pinSize * 2,
     0,
-    sizeCanvas * 2,
-    20,
+    configSizes.canvasSize * 2,
+    linesCount + 1,
     {
       angle: 90,
       render: {
-        visible: true,
+        visible: false,
       },
       isStatic: true,
     },
   )
 
   const rightWall = Bodies.rectangle(
-    linesCount < 12 ? sizeCanvas / 2 + configSizes.pinSize * 2 : sizeCanvas / 2,
+    configSizes.canvasSize / 2 + configSizes.pinSize * 2,
     0,
-    sizeCanvas * 2,
-    20,
+    configSizes.canvasSize * 2,
+    linesCount + 1,
     {
       angle: -90,
       render: {
-        visible: true,
+        visible: false,
       },
       isStatic: true,
     },
@@ -224,13 +230,15 @@ export function Game() {
   const holes = getHolesByLine(linesCount, riskMode)
   const holesBodies: Body[] = []
   let firstHolePositionX: number =
-    sizeCanvas / 2 - (configSizes.pinGap / 2) * linesCount - configSizes.pinGap
+    configSizes.canvasSize / 2 -
+    (configSizes.pinGap / 2) * linesCount -
+    configSizes.pinGap
 
   holes.forEach((hole) => {
     const blockSize = configSizes.pinGap - configSizes.pinSize * 2 // height and width
     const holeBody = Bodies.rectangle(
       firstHolePositionX + blockSize + configSizes.pinSize * 2,
-      ACTIVE_AREA_HEIGHT + DISTANCE_FROM_TOP_FLOOR,
+      configSizes.activePlinkoHeight + configSizes.distanceFromTop,
       blockSize,
       blockSize,
       {
@@ -326,11 +334,11 @@ export function Game() {
     <div className={styles.mainWrapper}>
       <div className={styles.canvasWrapper}>
         <div id="plinko" />
-        <Lines />
-        <RiskModesWrapper />
-        <ActiveBalls />
         <HolesHtml config={configSizes} />
       </div>
+      <Lines />
+      <ActiveBalls />
+      <RiskModesWrapper />
       <PlayAction run={bet} />
       <ActionsGame />
     </div>

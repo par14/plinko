@@ -12,10 +12,12 @@ import {
 import { setRiskMode } from "@store/config/config.slice"
 import { clearStatistics } from "@store/history/history.slice"
 import { useAppDispatch, useAppSelector } from "@store/hooks/store.hooks"
+import { useMediaQuery } from "usehooks-ts"
 
 import styles from "./index.module.css"
 
 export function RiskModesWrapper() {
+  const matches = useMediaQuery("(max-width: 535px)")
   const riskMode = useAppSelector(selectRiskMode)
   const activeBalls = useAppSelector(selectActiveBalls)
   const userId = useAppSelector(selectCurrentUserId)
@@ -30,7 +32,11 @@ export function RiskModesWrapper() {
 
   return (
     <div className={styles.riskModeWrapper}>
-      <Typography color="#ffc93c" fontSize="16px" fontWeight="bold">
+      <Typography
+        color="#ffc93c"
+        fontSize={matches ? "12px" : "16px"}
+        fontWeight="bold"
+      >
         Risk Level
       </Typography>
       <div className={styles.riskModeGroup}>
@@ -38,11 +44,11 @@ export function RiskModesWrapper() {
           <Button
             aria-label="choose risk mode"
             sx={{
-              minWidth: "60px",
+              minWidth: matches ? "30px" : "60px",
               padding: "4px",
-              paddingLeft: "1rem",
-              paddingRight: "1rem",
-              fontSize: "18px",
+              paddingLeft: matches ? "0.5rem" : "1rem",
+              paddingRight: matches ? "0.5rem" : "1rem",
+              fontSize: matches ? "12px" : "18px",
               color: "white",
               fontWeight: 600,
               backgroundColor: riskMode === mode ? "#9fd3c7" : "",

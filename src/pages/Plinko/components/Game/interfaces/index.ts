@@ -17,6 +17,9 @@ export interface SizeConfig {
   pinSize: number
   pinGap: number
   ballSize: number
+  canvasSize: number
+  distanceFromTop: number
+  activePlinkoHeight: number
 }
 
 export type HoleEntities = HoleEntity[]

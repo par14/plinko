@@ -8,10 +8,12 @@ import { setBet } from "@store/config/config.slice"
 import { useAppDispatch, useAppSelector } from "@store/hooks/store.hooks"
 import type { ChangeEvent } from "react"
 import { NumericFormat } from "react-number-format"
+import { useMediaQuery } from "usehooks-ts"
 
 import styles from "./index.module.css"
 
 export function ActionsGame() {
+  const matches = useMediaQuery("(max-width: 535px)")
   const currentBalance = useAppSelector(selectBalance)
   const userId = useAppSelector(selectCurrentUserId)
   const activeBalls = useAppSelector(selectActiveBalls)
@@ -30,7 +32,7 @@ export function ActionsGame() {
   function changeBetViaAction(action: ActionOption) {
     if (!userId) return
 
-    let value = 0
+    let value
 
     if (action.label === "max") {
       value = currentBalance
@@ -90,7 +92,8 @@ export function ActionsGame() {
               aria-label="choose active for bet"
               sx={{
                 padding: "2px",
-                marginLeft: "4px",
+                minWidth: matches ? "48px" : "64px",
+                marginLeft: matches ? "8px" : "4px",
                 fontSize: "14px",
                 color: "white",
                 fontWeight: 600,

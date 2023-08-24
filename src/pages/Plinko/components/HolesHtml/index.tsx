@@ -1,8 +1,7 @@
 import { Tooltip } from "@mui/material"
 import {
-  ACTIVE_AREA_HEIGHT,
-  DISTANCE_FROM_TOP_FLOOR,
-  MAX_WORLD_WIDTH,
+  INITIAL_MOBILE_SIZES_FOR_8_LINES,
+  INITIAL_SIZES_FOR_8_LINES,
 } from "@pages/Plinko/components/Game/config"
 import type { SizeConfig } from "@pages/Plinko/components/Game/interfaces"
 import { getHolesByLine } from "@pages/Plinko/components/Game/utils/getHoles"
@@ -14,28 +13,42 @@ import {
 } from "@store/config/config.selectors"
 import { selectStatisticItems } from "@store/history/history.selectors"
 import { useAppSelector } from "@store/hooks/store.hooks"
+import { useEffect, useState } from "react"
+import { useMediaQuery } from "usehooks-ts"
 
 import styles from "./index.module.css"
 
 export function HolesHtml(props: { config: SizeConfig }) {
+  const matches = useMediaQuery("(max-width: 535px)")
   const linesCount = useAppSelector(selectLinesCount)
   const riskMode = useAppSelector(selectRiskMode)
   const betValue = useAppSelector(selectBet)
   const statisticItems = useAppSelector(selectStatisticItems)
+  const [configSizes, setConfigSizes] = useState(
+    matches ? INITIAL_MOBILE_SIZES_FOR_8_LINES : INITIAL_SIZES_FOR_8_LINES,
+  )
 
   const holes = getHolesByLine(linesCount, riskMode)
   const firstHolePositionX: number =
-    MAX_WORLD_WIDTH / 2 -
+    configSizes.canvasSize / 2 -
     (props.config.pinGap / 2) * linesCount -
     props.config.pinGap
   const blockSize = props.config.pinGap - props.config.pinSize * 2
   const leftPosition = firstHolePositionX + blockSize * 0.7
   const topPosition =
-    ACTIVE_AREA_HEIGHT + DISTANCE_FROM_TOP_FLOOR - blockSize / 1.7
+    configSizes.activePlinkoHeight +
+    configSizes.distanceFromTop -
+    blockSize / 1.7
+
+  useEffect(() => {
+    setConfigSizes(
+      matches ? INITIAL_MOBILE_SIZES_FOR_8_LINES : INITIAL_SIZES_FOR_8_LINES,
+    )
+  }, [matches])
 
   return (
     <div
-      className={`${styles.linesWrapper}`}
+      className={`${styles.holesWrapper}`}
       style={{ left: `${leftPosition}px`, top: `${topPosition}px` }}
     >
       {holes.map((value, i) => {

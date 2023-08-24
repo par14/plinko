@@ -10,13 +10,31 @@ export const INITIAL_SIZES_FOR_8_LINES: SizeConfig = {
   pinSize: 4.5,
   pinGap: 45,
   ballSize: 13.4,
+  distanceFromTop: 60,
+  canvasSize: 500,
+  activePlinkoHeight: 45 * 9, // where 45 current gap and 9 - 8 min lines + 1 more gap
 }
+
+export const INITIAL_MOBILE_SIZES_FOR_8_LINES: SizeConfig = {
+  pinSize: 2.7,
+  pinGap: 27,
+  ballSize: 8.04,
+  distanceFromTop: 36,
+  canvasSize: 300,
+  activePlinkoHeight: 27 * 9, // where 45 current gap and 9 - 8 min lines + 1 more gap
+}
+
+export const MAX_ACTIVE_BALLS = 20
+export const START_PINS = 3
 
 export const canvasColors = {
   background: "transparent",
   ballActive: "#f4acb7",
   ballInactive: "#445069",
 }
+
+export const LINE_OPTIONS: LinesType[] = [8, 9, 10, 11, 12, 13, 14, 15, 16]
+export const MODE_OPTIONS: RiskModes[] = ["high", "normal", "low"]
 
 export const ACTIONS_OPTIONS: ActionOptions = [
   {
@@ -44,15 +62,3 @@ export const ACTIONS_OPTIONS: ActionOptions = [
     value: 1,
   },
 ]
-
-export const MAX_WORLD_WIDTH = 500
-export const MAX_WORLD_HEIGHT = 500
-export const MAX_ACTIVE_BALLS = 20
-export const START_PINS = 3
-export const LINE_OPTIONS: LinesType[] = [8, 9, 10, 11, 12, 13, 14, 15, 16]
-export const MODE_OPTIONS: RiskModes[] = ["high", "normal", "low"]
-export const MIN_LINES_COUNT = 8
-export const MAX_LINES_COUNT = 16
-export const DISTANCE_FROM_TOP_FLOOR = 60
-export const ACTIVE_AREA_HEIGHT =
-  INITIAL_SIZES_FOR_8_LINES.pinGap * (MIN_LINES_COUNT + 1)
