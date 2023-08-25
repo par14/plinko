@@ -57,7 +57,6 @@ export function Game() {
   const engine = Engine.create()
 
   useEffect(() => {
-    console.log("HERE RENDER GAME")
     setConfigSizes(
       getRateForLine(
         matches ? INITIAL_MOBILE_SIZES_FOR_8_LINES : INITIAL_SIZES_FOR_8_LINES,
@@ -156,7 +155,9 @@ export function Game() {
       addInGameBall()
 
       const ballSound = new Audio(ballAudio)
-      playSong(ballSound)
+      ballSound.currentTime = 0
+      ballSound.volume = 0.2
+      ballSound.play()
 
       const ballColor =
         ballValue <= 0 ? canvasColors.ballInactive : canvasColors.ballActive
@@ -200,10 +201,10 @@ export function Game() {
   )
 
   const leftWall = Bodies.rectangle(
-    configSizes.canvasSize / 2 - configSizes.pinSize * 2,
+    configSizes.canvasSize / 2 - configSizes.ballSize,
     0,
     configSizes.canvasSize * 2,
-    linesCount + 1,
+    (linesCount - 1) * configSizes.pinSize,
     {
       angle: 90,
       render: {
@@ -214,10 +215,10 @@ export function Game() {
   )
 
   const rightWall = Bodies.rectangle(
-    configSizes.canvasSize / 2 + configSizes.pinSize * 2,
+    configSizes.canvasSize / 2 + configSizes.ballSize,
     0,
     configSizes.canvasSize * 2,
-    linesCount + 1,
+    (linesCount - 1) * configSizes.pinSize,
     {
       angle: -90,
       render: {
@@ -260,12 +261,6 @@ export function Game() {
     leftWall,
     rightWall,
   ])
-
-  function playSong(song: HTMLAudioElement) {
-    song.currentTime = 0
-    song.volume = 0.2
-    song.play()
-  }
 
   function onTouchHole(ball: Body, multiplier: Body) {
     ball.collisionFilter.group = 2
