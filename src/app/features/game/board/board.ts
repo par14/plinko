@@ -72,6 +72,8 @@ export class Board {
   private balls: BallAnim[] = [];
   private flashTimer: ReturnType<typeof setTimeout> | null = null;
   private lastTs = 0;
+  private rafId = 0;
+  private running = false;
 
   constructor() {
     afterNextRender(() => {
@@ -87,19 +89,8 @@ export class Board {
 
       this.game.registerLauncher((drop, onLand) => this.launch(drop, onLand));
 
-      this.lastTs = performance.now();
-      let rafId = 0;
-      const loop = (ts: number) => {
-        const dt = ts - this.lastTs;
-        this.lastTs = ts;
-        this.update(dt);
-        this.render();
-        rafId = requestAnimationFrame(loop);
-      };
-      rafId = requestAnimationFrame(loop);
-
       this.destroyRef.onDestroy(() => {
-        cancelAnimationFrame(rafId);
+        this.stopLoop();
         observer.disconnect();
         if (this.flashTimer) clearTimeout(this.flashTimer);
       });
@@ -121,13 +112,12 @@ export class Board {
 
   private resize(): void {
     const canvas = this.canvasRef().nativeElement;
-    const width = this.host.nativeElement.clientWidth || 360;
-    this.cssW = width;
-    this.cssH = width; // square play area
+    // CSS sizes the canvas (width:100% + aspect-ratio:1/1); we only measure the
+    // laid-out box and set the backing-store resolution to match.
+    this.cssW = canvas.clientWidth || this.host.nativeElement.clientWidth || 360;
+    this.cssH = canvas.clientHeight || this.cssW;
     this.dpr = Math.min(typeof devicePixelRatio === 'number' ? devicePixelRatio : 1, 2.5);
 
-    canvas.style.width = `${this.cssW}px`;
-    canvas.style.height = `${this.cssH}px`;
     canvas.width = Math.round(this.cssW * this.dpr);
     canvas.height = Math.round(this.cssH * this.dpr);
     this.ctx?.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -171,9 +161,37 @@ export class Board {
     if (this.reducedMotion) {
       ball.elapsed = R * ROW_DURATION_MS;
       this.settleBall(ball);
+      this.render();
       return;
     }
     this.balls.push(ball);
+    this.startLoop();
+  }
+
+  // The board is static between drops, so the rAF loop only runs while balls
+  // are in flight; otherwise we idle and redraw on demand (resize / config).
+  private startLoop(): void {
+    if (this.running) return;
+    this.running = true;
+    this.lastTs = performance.now();
+    const loop = (ts: number) => {
+      const dt = ts - this.lastTs;
+      this.lastTs = ts;
+      this.update(dt);
+      this.render();
+      if (this.balls.length) {
+        this.rafId = requestAnimationFrame(loop);
+      } else {
+        this.running = false;
+        this.render(); // final static frame
+      }
+    };
+    this.rafId = requestAnimationFrame(loop);
+  }
+
+  private stopLoop(): void {
+    this.running = false;
+    cancelAnimationFrame(this.rafId);
   }
 
   private update(dt: number): void {

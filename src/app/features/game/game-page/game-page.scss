@@ -8,6 +8,19 @@
   margin-inline: auto;
 }
 
+@media (max-width: 560px) {
+  .game-page {
+    gap: 0.9rem;
+    padding: 0.9rem;
+  }
+}
+
+/* min-width:0 lets the 1fr track shrink below the canvas's intrinsic px width
+   (grid items default to min-width:auto, which would force horizontal overflow). */
+.game-page > * {
+  min-width: 0;
+}
+
 .game-page__controls {
   order: 2;
 }

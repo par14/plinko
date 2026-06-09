@@ -64,13 +64,24 @@ body {
   font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.5;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  -webkit-tap-highlight-color: transparent;
   background:
     radial-gradient(900px 600px at 12% -8%, var(--bg-glow-1), transparent 60%),
     radial-gradient(800px 600px at 100% 0%, var(--bg-glow-2), transparent 55%),
     var(--bg);
   background-attachment: fixed;
+}
+
+/* Comfortable touch targets on coarse pointers (phones/tablets). */
+@media (pointer: coarse) {
+  button,
+  select,
+  input {
+    min-height: 44px;
+  }
 }
 
 h1,

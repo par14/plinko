@@ -19,10 +19,16 @@ interface PlinkoSchema extends DBSchema {
 
 const DB_VERSION = 1;
 
+/** Max results retained per player; older ones are pruned on insert. */
+export const RESULTS_CAP = 200;
+
 export class IdbPlinkoStore implements PlinkoStore {
   private readonly dbPromise: Promise<IDBPDatabase<PlinkoSchema>>;
 
-  constructor(name = 'plinko') {
+  constructor(
+    name = 'plinko',
+    private readonly resultsCap = RESULTS_CAP,
+  ) {
     this.dbPromise = openDB<PlinkoSchema>(name, DB_VERSION, {
       upgrade(db) {
         if (!db.objectStoreNames.contains('players')) {
@@ -49,7 +55,16 @@ export class IdbPlinkoStore implements PlinkoStore {
   }
 
   async addResult(result: GameResult): Promise<void> {
-    await (await this.dbPromise).put('results', result);
+    const db = await this.dbPromise;
+    await db.put('results', result);
+    const all = await db.getAllFromIndex('results', 'by-player', result.playerId);
+    if (all.length <= this.resultsCap) return;
+    const oldest = all
+      .sort((a, b) => a.time - b.time)
+      .slice(0, all.length - this.resultsCap);
+    const tx = db.transaction('results', 'readwrite');
+    for (const r of oldest) await tx.store.delete(r.id);
+    await tx.done;
   }
 
   async getResults(playerId: string, limit?: number): Promise<GameResult[]> {
@@ -73,6 +88,8 @@ export class MemoryPlinkoStore implements PlinkoStore {
   private readonly players = new Map<string, Player>();
   private readonly results = new Map<string, GameResult>();
 
+  constructor(private readonly resultsCap = RESULTS_CAP) {}
+
   async putPlayer(player: Player): Promise<void> {
     this.players.set(player.id, { ...player });
   }
@@ -87,6 +104,12 @@ export class MemoryPlinkoStore implements PlinkoStore {
 
   async addResult(result: GameResult): Promise<void> {
     this.results.set(result.id, { ...result });
+    const mine = [...this.results.values()]
+      .filter((r) => r.playerId === result.playerId)
+      .sort((a, b) => a.time - b.time);
+    for (let i = 0; i < mine.length - this.resultsCap; i++) {
+      this.results.delete(mine[i].id);
+    }
   }
 
   async getResults(playerId: string, limit?: number): Promise<GameResult[]> {

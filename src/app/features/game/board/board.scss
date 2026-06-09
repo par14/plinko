@@ -23,6 +23,7 @@
 .board__canvas {
   display: block;
   width: 100%;
+  aspect-ratio: 1 / 1;
 }
 
 .board__buckets {
@@ -30,6 +31,8 @@
   grid-template-columns: repeat(var(--cols, 1), 1fr);
   gap: 3px;
   margin-top: 8px;
+  /* Match the stage's inner padding so buckets line up under the pegs. */
+  padding-inline: 0.5rem;
 }
 
 .board__bucket {

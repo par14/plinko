@@ -1,0 +1,14 @@
+{
+  "name": "Plinko — Provably-Fair Plinko Game",
+  "short_name": "Plinko",
+  "description": "Provably-fair Plinko with players, full history and a leaderboard.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b0e16",
+  "theme_color": "#0b0e16",
+  "icons": [
+    { "src": "favicon.ico", "sizes": "48x48 32x32 16x16", "type": "image/x-icon" }
+  ]
+}

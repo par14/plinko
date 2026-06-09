@@ -86,3 +86,26 @@ describe.each(implementations)('%s', (_name, create) => {
     expect(await store.getResults('a')).toEqual([]);
   });
 });
+
+const cappers: Array<[string, () => PlinkoStore]> = [
+  ['IdbPlinkoStore', () => new IdbPlinkoStore(`plinko-cap-${dbCounter++}`, 5)],
+  ['MemoryPlinkoStore', () => new MemoryPlinkoStore(5)],
+];
+
+describe.each(cappers)('%s results cap', (_name, create) => {
+  it('keeps only the newest N results for a player', async () => {
+    const store = create();
+    for (let i = 0; i < 9; i++) await store.addResult(result(`r${i}`, 'a', i));
+    const results = await store.getResults('a');
+    expect(results).toHaveLength(5);
+    expect(results.map((r) => r.id)).toEqual(['r8', 'r7', 'r6', 'r5', 'r4']);
+  });
+
+  it('caps each player independently', async () => {
+    const store = create();
+    for (let i = 0; i < 7; i++) await store.addResult(result(`a${i}`, 'a', i));
+    for (let i = 0; i < 3; i++) await store.addResult(result(`b${i}`, 'b', i));
+    expect(await store.getResults('a')).toHaveLength(5);
+    expect(await store.getResults('b')).toHaveLength(3);
+  });
+});
