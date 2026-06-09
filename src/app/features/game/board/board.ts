@@ -90,22 +90,35 @@ export class Board {
       this.game.registerLauncher((drop, onLand) => this.launch(drop, onLand));
 
       this.destroyRef.onDestroy(() => {
-        this.stopLoop();
+        this.flushBalls();
         observer.disconnect();
         if (this.flashTimer) clearTimeout(this.flashTimer);
       });
     });
 
-    // Board geometry changes with rows/risk; drop in-flight balls and redraw.
+    // Board geometry changes with rows/risk; settle in-flight balls (so their
+    // stakes resolve) before resetting the board for the new layout.
     effect(() => {
       this.rows();
       this.risk();
       untracked(() => {
         if (!this.ctx) return;
-        this.balls = [];
+        this.flushBalls();
         this.resize();
       });
     });
+  }
+
+  /** Settle any in-flight balls and stop the loop — never drop a wagered ball. */
+  private flushBalls(): void {
+    for (const ball of this.balls) {
+      if (!ball.landed) {
+        ball.landed = true;
+        ball.onLand();
+      }
+    }
+    this.balls = [];
+    this.stopLoop();
   }
 
   // ----- geometry --------------------------------------------------------
@@ -157,13 +170,6 @@ export class Board {
     }
 
     const ball: BallAnim = { drop, onLand, waypoints, elapsed: 0, landed: false };
-
-    if (this.reducedMotion) {
-      ball.elapsed = R * ROW_DURATION_MS;
-      this.settleBall(ball);
-      this.render();
-      return;
-    }
     this.balls.push(ball);
     this.startLoop();
   }
@@ -229,7 +235,8 @@ export class Board {
     const ease = local * local * (3 - 2 * local);
     const x = from.x + (to.x - from.x) * ease;
     const rowGap = to.y - from.y;
-    const hop = Math.sin(Math.PI * local) * rowGap * 0.3;
+    // Skip the bounce arc under reduced motion; the ball still descends calmly.
+    const hop = this.reducedMotion ? 0 : Math.sin(Math.PI * local) * rowGap * 0.3;
     const y = from.y + (to.y - from.y) * local - hop;
     return { x, y };
   }
