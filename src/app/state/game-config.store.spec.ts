@@ -29,14 +29,6 @@ describe('GameConfigStore', () => {
     expect(store.bet()).toBe(MIN_BET);
   });
 
-  it('advances the nonce on every takeSeed call', () => {
-    const store = setup();
-    const a = store.takeSeed();
-    const b = store.takeSeed();
-    expect(b.nonce).toBe(a.nonce + 1);
-    expect(a.serverSeed).toBe(b.serverSeed);
-  });
-
   it('tracks active balls without going negative', () => {
     const store = setup();
     store.addBall();

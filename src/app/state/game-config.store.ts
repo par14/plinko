@@ -1,6 +1,5 @@
 import { signalStore, patchState, withMethods, withState } from '@ngrx/signals';
 import type { RiskMode, Rows } from '../core/fairness/multipliers';
-import type { Seed } from '../core/fairness/outcome';
 import { roundMoney } from '../core/util/money';
 
 export const MIN_BET = 1;
@@ -30,18 +29,9 @@ function writePrefs(prefs: Prefs): void {
   }
 }
 
-function randomHex(byteLength = 16): string {
-  const bytes = new Uint8Array(byteLength);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-}
-
 interface GameConfigState extends Prefs {
   activeBalls: number;
   lastWin: number | null;
-  serverSeed: string;
-  clientSeed: string;
-  nonce: number;
 }
 
 export const GameConfigStore = signalStore(
@@ -50,10 +40,6 @@ export const GameConfigStore = signalStore(
     ...readPrefs(),
     activeBalls: 0,
     lastWin: null,
-    // Fresh provably-fair seed pair per session; nonce increments per drop.
-    serverSeed: randomHex(),
-    clientSeed: randomHex(8),
-    nonce: 0,
   })),
   withMethods((store) => {
     const persist = () =>
@@ -93,16 +79,6 @@ export const GameConfigStore = signalStore(
       },
       removeBall(): void {
         patchState(store, (s) => ({ activeBalls: Math.max(0, s.activeBalls - 1) }));
-      },
-      /** Returns the seed for the next drop and advances the nonce. */
-      takeSeed(): Seed {
-        const seed: Seed = {
-          serverSeed: store.serverSeed(),
-          clientSeed: store.clientSeed(),
-          nonce: store.nonce() + 1,
-        };
-        patchState(store, { nonce: seed.nonce });
-        return seed;
       },
     };
   }),

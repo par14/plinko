@@ -16,9 +16,6 @@ function result(id: string, multiplier: number): GameResult {
     multiplier,
     payout: multiplier,
     win: multiplier - 1,
-    serverSeed: 's',
-    clientSeed: 'c',
-    nonce: 1,
     time: 1,
   };
 }

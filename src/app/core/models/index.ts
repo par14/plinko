@@ -22,9 +22,5 @@ export interface GameResult {
   payout: number;
   /** Net profit/loss = payout - bet. */
   win: number;
-  /** Provably-fair inputs, stored so any past drop can be re-verified. */
-  serverSeed: string;
-  clientSeed: string;
-  nonce: number;
   time: number;
 }

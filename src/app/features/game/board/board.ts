@@ -14,24 +14,29 @@ import {
 import { MULTIPLIERS } from '../../../core/fairness/multipliers';
 import { GameConfigStore } from '../../../state/game-config.store';
 import { GameService, type BallDrop } from '../../../state/game.service';
-
-interface Point {
-  x: number;
-  y: number;
-}
+import {
+  bucketOf,
+  createWorld,
+  simulateLanding,
+  spawnBall,
+  step,
+  type Ball,
+  type Peg,
+  type World,
+} from './physics';
 
 interface BallAnim {
   drop: BallDrop;
-  onLand: () => void;
-  /** Logical (CSS-pixel) waypoints, one per peg row plus the bucket entry. */
-  waypoints: Point[];
-  elapsed: number;
-  landed: boolean;
+  onLand: (bucketIndex: number) => void;
+  ball: Ball;
+  reported: boolean;
+  /** Wall-clock time (ms) at which the settled ball is removed. */
+  removeAt: number | null;
 }
 
-const ROW_DURATION_MS = 95;
-const SETTLE_MS = 320;
-const TOP_MARGIN_RATIO = 0.08;
+const SETTLE_LINGER_MS = 550;
+const PEG_FLASH_MS = 130;
+const MAX_FRAME_DT = 0.05; // s — clamp so a backgrounded tab doesn't teleport balls
 
 @Component({
   selector: 'app-board',
@@ -69,7 +74,9 @@ export class Board {
   private cssH = 0;
   private dpr = 1;
   private reducedMotion = false;
+  private world: World | null = null;
   private balls: BallAnim[] = [];
+  private readonly pegFlash = new Map<Peg, number>();
   private flashTimer: ReturnType<typeof setTimeout> | null = null;
   private lastTs = 0;
   private rafId = 0;
@@ -96,8 +103,8 @@ export class Board {
       });
     });
 
-    // Board geometry changes with rows/risk; settle in-flight balls (so their
-    // stakes resolve) before resetting the board for the new layout.
+    // Rebuild the world for the new layout when rows/risk change, settling any
+    // in-flight balls first so no wagered ball is dropped.
     effect(() => {
       this.rows();
       this.risk();
@@ -111,22 +118,23 @@ export class Board {
 
   /** Settle any in-flight balls and stop the loop — never drop a wagered ball. */
   private flushBalls(): void {
-    for (const ball of this.balls) {
-      if (!ball.landed) {
-        ball.landed = true;
-        ball.onLand();
+    for (const anim of this.balls) {
+      if (!anim.reported) {
+        if (anim.ball.bucket < 0 && this.world) {
+          anim.ball.bucket = bucketOf(this.world, anim.ball.x);
+        }
+        this.report(anim);
       }
     }
     this.balls = [];
+    this.pegFlash.clear();
     this.stopLoop();
   }
 
-  // ----- geometry --------------------------------------------------------
+  // ----- sizing ----------------------------------------------------------
 
   private resize(): void {
     const canvas = this.canvasRef().nativeElement;
-    // CSS sizes the canvas (width:100% + aspect-ratio:1/1); we only measure the
-    // laid-out box and set the backing-store resolution to match.
     this.cssW = canvas.clientWidth || this.host.nativeElement.clientWidth || 360;
     this.cssH = canvas.clientHeight || this.cssW;
     this.dpr = Math.min(typeof devicePixelRatio === 'number' ? devicePixelRatio : 1, 2.5);
@@ -134,54 +142,58 @@ export class Board {
     canvas.width = Math.round(this.cssW * this.dpr);
     canvas.height = Math.round(this.cssH * this.dpr);
     this.ctx?.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+
+    this.world = createWorld(this.rows(), this.cssW, this.cssH);
     this.render();
   }
 
-  /** Horizontal centre of slot `s` at peg row `r` (s in 0..r). */
-  private slotX(r: number, s: number): number {
-    const cellW = this.cssW / (this.rows() + 1);
-    return this.cssW / 2 + (s - r / 2) * cellW;
-  }
+  // ----- launching & stepping -------------------------------------------
 
-  private rowY(r: number): number {
-    const top = this.cssH * TOP_MARGIN_RATIO;
-    const rowGap = (this.cssH - top) / this.rows();
-    return top + r * rowGap;
-  }
+  private launch(drop: BallDrop, onLand: (bucketIndex: number) => void): void {
+    const world = this.world;
+    if (!world) return;
 
-  private pegRadius(): number {
-    return Math.max(1.5, (this.cssW / (this.rows() + 1)) * 0.12);
-  }
-
-  private ballRadius(): number {
-    return Math.max(3, (this.cssW / (this.rows() + 1)) * 0.3);
-  }
-
-  // ----- animation -------------------------------------------------------
-
-  private launch(drop: BallDrop, onLand: () => void): void {
-    const R = drop.rows;
-    const waypoints: Point[] = [];
-    let rights = 0;
-    waypoints.push({ x: this.slotX(0, 0), y: this.rowY(0) });
-    for (let r = 0; r < R; r++) {
-      if (drop.outcome.path[r] === 'R') rights++;
-      waypoints.push({ x: this.slotX(r + 1, rights), y: this.rowY(r + 1) });
+    if (this.reducedMotion) {
+      // No motion: resolve the landing headlessly and show the ball at rest.
+      const bucket = simulateLanding(drop.rows, this.cssW, this.cssH, Math.random);
+      const ball = spawnBall(world, Math.random);
+      ball.settled = true;
+      ball.bucket = bucket;
+      ball.x = (bucket + 0.5) * world.cellW;
+      ball.y = world.floorY;
+      const anim: BallAnim = {
+        drop,
+        onLand,
+        ball,
+        reported: false,
+        removeAt: performance.now() + SETTLE_LINGER_MS,
+      };
+      this.report(anim);
+      this.balls.push(anim);
+      this.startLoop();
+      return;
     }
 
-    const ball: BallAnim = { drop, onLand, waypoints, elapsed: 0, landed: false };
-    this.balls.push(ball);
+    const ball = spawnBall(world, Math.random);
+    this.balls.push({ drop, onLand, ball, reported: false, removeAt: null });
     this.startLoop();
   }
 
-  // The board is static between drops, so the rAF loop only runs while balls
-  // are in flight; otherwise we idle and redraw on demand (resize / config).
+  private report(anim: BallAnim): void {
+    if (anim.reported) return;
+    anim.reported = true;
+    anim.onLand(anim.ball.bucket);
+    this.landedBucket.set(anim.ball.bucket);
+    if (this.flashTimer) clearTimeout(this.flashTimer);
+    this.flashTimer = setTimeout(() => this.landedBucket.set(null), 700);
+  }
+
   private startLoop(): void {
     if (this.running) return;
     this.running = true;
     this.lastTs = performance.now();
     const loop = (ts: number) => {
-      const dt = ts - this.lastTs;
+      const dt = Math.min((ts - this.lastTs) / 1000, MAX_FRAME_DT);
       this.lastTs = ts;
       this.update(dt);
       this.render();
@@ -189,7 +201,7 @@ export class Board {
         this.rafId = requestAnimationFrame(loop);
       } else {
         this.running = false;
-        this.render(); // final static frame
+        this.render();
       }
     };
     this.rafId = requestAnimationFrame(loop);
@@ -201,81 +213,62 @@ export class Board {
   }
 
   private update(dt: number): void {
-    if (!this.balls.length) return;
+    const world = this.world;
+    if (!world) return;
+
+    // Decay peg-hit flashes.
+    if (this.pegFlash.size) {
+      for (const [peg, remaining] of this.pegFlash) {
+        const next = remaining - dt * 1000;
+        if (next <= 0) this.pegFlash.delete(peg);
+        else this.pegFlash.set(peg, next);
+      }
+    }
+
+    const now = performance.now();
     const remaining: BallAnim[] = [];
-    for (const ball of this.balls) {
-      ball.elapsed += dt;
-      const total = ball.drop.rows * ROW_DURATION_MS;
-      if (!ball.landed && ball.elapsed >= total) {
-        this.settleBall(ball);
+    for (const anim of this.balls) {
+      if (!anim.ball.settled) {
+        step(world, anim.ball, dt, Math.random);
+        if (anim.ball.hitPeg) this.pegFlash.set(anim.ball.hitPeg, PEG_FLASH_MS);
       }
-      if (ball.landed && ball.elapsed >= total + SETTLE_MS) {
-        continue; // remove
+      if (anim.ball.settled && !anim.reported) {
+        this.report(anim);
+        anim.removeAt = now + SETTLE_LINGER_MS;
       }
-      remaining.push(ball);
+      if (anim.removeAt !== null && now >= anim.removeAt) continue; // remove
+      remaining.push(anim);
     }
     this.balls = remaining;
-  }
-
-  private settleBall(ball: BallAnim): void {
-    ball.landed = true;
-    ball.onLand();
-    const bucket = ball.drop.outcome.bucketIndex;
-    this.landedBucket.set(bucket);
-    if (this.flashTimer) clearTimeout(this.flashTimer);
-    this.flashTimer = setTimeout(() => this.landedBucket.set(null), 600);
-  }
-
-  private ballPosition(ball: BallAnim): Point {
-    const segDur = ROW_DURATION_MS;
-    const segment = Math.min(Math.floor(ball.elapsed / segDur), ball.drop.rows - 1);
-    const local = Math.min((ball.elapsed - segment * segDur) / segDur, 1);
-    const from = ball.waypoints[segment];
-    const to = ball.waypoints[segment + 1];
-    const ease = local * local * (3 - 2 * local);
-    const x = from.x + (to.x - from.x) * ease;
-    const rowGap = to.y - from.y;
-    // Skip the bounce arc under reduced motion; the ball still descends calmly.
-    const hop = this.reducedMotion ? 0 : Math.sin(Math.PI * local) * rowGap * 0.3;
-    const y = from.y + (to.y - from.y) * local - hop;
-    return { x, y };
   }
 
   // ----- rendering -------------------------------------------------------
 
   private render(): void {
     const ctx = this.ctx;
-    if (!ctx) return;
+    const world = this.world;
+    if (!ctx || !world) return;
     ctx.clearRect(0, 0, this.cssW, this.cssH);
 
-    const R = this.rows();
-    const pegR = this.pegRadius();
-
-    // Pegs: a faint halo plus a bright core, for a soft glowing look.
-    for (let r = 0; r < R; r++) {
-      for (let s = 0; s <= r; s++) {
-        const px = this.slotX(r, s);
-        const py = this.rowY(r);
-        ctx.beginPath();
-        ctx.fillStyle = 'rgba(120, 150, 220, 0.18)';
-        ctx.arc(px, py, pegR * 1.9, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
-        ctx.arc(px, py, pegR, 0, Math.PI * 2);
-        ctx.fill();
-      }
+    const pegR = world.pegR;
+    for (const peg of world.pegs) {
+      const flash = this.pegFlash.get(peg);
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(120, 150, 220, 0.18)';
+      ctx.arc(peg.x, peg.y, pegR * 1.9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.fillStyle = flash ? '#ffe39a' : 'rgba(255, 255, 255, 0.92)';
+      ctx.arc(peg.x, peg.y, flash ? pegR * 1.25 : pegR, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    const ballR = this.ballRadius();
-    for (const ball of this.balls) {
-      const { x, y } = this.ballPosition(ball);
-
-      // Soft glow.
+    const ballR = world.ballR;
+    for (const anim of this.balls) {
+      const { x, y } = anim.ball;
       ctx.save();
       ctx.shadowColor = 'rgba(255, 196, 64, 0.7)';
       ctx.shadowBlur = ballR * 1.8;
-
       const gradient = ctx.createRadialGradient(
         x - ballR * 0.35,
         y - ballR * 0.35,
@@ -287,7 +280,6 @@ export class Board {
       gradient.addColorStop(0, '#fff4cf');
       gradient.addColorStop(0.45, '#ffd34d');
       gradient.addColorStop(1, '#f0a52e');
-
       ctx.beginPath();
       ctx.fillStyle = gradient;
       ctx.arc(x, y, ballR, 0, Math.PI * 2);

@@ -18,9 +18,6 @@ function result(id: string, playerId: string, time: number, win = 5): GameResult
     multiplier: 5.6,
     payout: 5.6,
     win,
-    serverSeed: 's',
-    clientSeed: 'c',
-    nonce: 1,
     time,
   };
 }
