@@ -1,13 +1,22 @@
 /**
- * A small, dependency-free 2-D physics world for Plinko.
+ * A small, dependency-free 2-D rigid-body world for Plinko.
  *
- * The ball falls under gravity and bounces off the pegs (circle–circle),
- * the side walls, and the bucket floor. Where it lands is decided entirely by
- * the simulation — there is no predetermined outcome. All randomness flows
- * through an injected `rng` so a simulation is reproducible for a given seed.
+ * The ball falls under gravity and bounces off the pegs, side frame and floor
+ * with real collision response (restitution on the normal, friction on the
+ * tangent, plus a tiny random surface perturbation). Where it lands is decided
+ * entirely by the simulation. All randomness flows through an injected `rng`, so
+ * a drop is reproducible for a given seed.
  *
- * Units are logical CSS pixels; velocities are px/s, gravity px/s². Gravity
- * scales with board height so the ~1.4 s drop feel is resolution-independent.
+ * Why it forms a centre-weighted bell (like a real Galton board): the pegs of
+ * each row sit under the gaps of the row above, so a ball always falls from a
+ * gap onto a peg and bounces into one of the two gaps below — an independent
+ * ~50/50 step per row. LOW restitution is the crucial bit: the ball loses energy
+ * at every peg, so it descends at a roughly constant speed instead of
+ * accelerating; constant speed → constant step size → a clean binomial spread
+ * (high restitution accelerates the ball and flings it to the edges).
+ *
+ * Units are logical CSS pixels; velocities px/s, gravity px/s². Everything
+ * scales with board size, so the distribution is resolution-independent.
  */
 
 export type Rng = () => number; // [0, 1)
@@ -16,6 +25,35 @@ export interface Peg {
   x: number;
   y: number;
 }
+
+export interface Tuning {
+  gravity: number; // × height → px/s²
+  restitution: number; // normal bounce (LOW keeps descent steady)
+  friction: number; // tangential velocity removed per peg hit [0..1]
+  surfaceJitter: number; // radians — random tilt of the contact normal
+  wallRestitution: number;
+  floorRestitution: number;
+  floorFriction: number;
+  ballRatio: number; // × cellW
+  pegRatio: number; // × cellW
+  spawnSpread: number; // × cellW — random horizontal spawn offset
+}
+
+export const DEFAULT_TUNING: Tuning = {
+  // High gravity keeps the ball energetic (it never stalls on a peg apex) and the
+  // drop weighty-but-brisk (~2.5 s); moderate restitution gives visible bounces;
+  // partial friction keeps natural horizontal carry without edge-flinging.
+  gravity: 18,
+  restitution: 0.6,
+  friction: 0.45,
+  surfaceJitter: 0.17,
+  wallRestitution: 0.4,
+  floorRestitution: 0.3,
+  floorFriction: 0.6,
+  ballRatio: 0.32,
+  pegRatio: 0.13,
+  spawnSpread: 0.25,
+};
 
 export interface World {
   rows: number;
@@ -28,6 +66,7 @@ export interface World {
   topMargin: number;
   rowGap: number;
   floorY: number;
+  tuning: Tuning;
 }
 
 export interface Ball {
@@ -42,64 +81,39 @@ export interface Ball {
   age: number;
 }
 
-// Tuning — chosen for a weighty, realistic feel.
 const TOP_MARGIN_RATIO = 0.08;
-const BALL_R_RATIO = 0.3; // × cellW
-const PEG_R_RATIO = 0.12; // × cellW
-const GRAVITY_SCALE = 1.4; // × height  → px/s²
-const RESTITUTION = 0.45; // peg/wall bounciness (normal component)
-const TANGENT_FRICTION = 0; // no retention → each peg is an independent ~50/50 deflection
-const WALL_RESTITUTION = 0.4;
-// Horizontal motion is scaled to a stable reference fall speed
-// vRef = √(2·g·depth) rather than the (bouncy, near-zero-at-apex) instantaneous
-// vy. A random kick of ±JITTER·vRef, capped at ±MAX_VX·vRef, makes each row a
-// consistent ~half-cell step with a random sign → a proper Galton random walk
-// (centre-weighted bell) that neither collapses to the centre nor flings to the
-// edges.
-const PEG_JITTER = 0.8; // × vRef — random sideways kick on a peg hit
-const MAX_VX_OVER_VREF = 0.42; // × vRef — keeps each step just under the triangle's half-cell/row widening
-const FLOOR_RESTITUTION = 0.35;
-const FLOOR_FRICTION = 0.7; // horizontal damping once on the floor
 const MAX_SUBSTEP = 1 / 240; // s — cap so fast balls don't tunnel through pegs
-const MAX_SIM_SECONDS = 8; // hard guard against a stuck ball
+const MAX_SIM_SECONDS = 10; // hard guard against a stuck ball
 
-export function createWorld(rows: number, width: number, height: number): World {
+export function createWorld(
+  rows: number,
+  width: number,
+  height: number,
+  tuning: Tuning = DEFAULT_TUNING,
+): World {
   const cellW = width / (rows + 1);
   const topMargin = height * TOP_MARGIN_RATIO;
   const rowGap = (height - topMargin) / rows;
-  const ballR = cellW * BALL_R_RATIO;
-  const pegR = cellW * PEG_R_RATIO;
+  const ballR = cellW * tuning.ballRatio;
+  const pegR = cellW * tuning.pegRatio;
 
   const pegs: Peg[] = [];
   for (let r = 0; r < rows; r++) {
     const y = topMargin + r * rowGap;
     for (let s = 0; s <= r; s++) {
-      const x = width / 2 + (s - r / 2) * cellW;
-      pegs.push({ x, y });
+      pegs.push({ x: width / 2 + (s - r / 2) * cellW, y });
     }
   }
 
-  return {
-    rows,
-    width,
-    height,
-    pegs,
-    cellW,
-    ballR,
-    pegR,
-    topMargin,
-    rowGap,
-    floorY: height - ballR,
-  };
+  return { rows, width, height, pegs, cellW, ballR, pegR, topMargin, rowGap, floorY: height - ballR, tuning };
 }
 
 export function spawnBall(world: World, rng: Rng): Ball {
   return {
-    // Small off-centre nudge so it strikes the top peg and fans out.
-    x: world.width / 2 + (rng() - 0.5) * world.cellW * 0.6,
+    x: world.width / 2 + (rng() - 0.5) * world.cellW * world.tuning.spawnSpread,
     y: world.topMargin - world.rowGap,
-    vx: (rng() - 0.5) * world.cellW * 0.5,
-    vy: world.cellW * 0.5,
+    vx: 0,
+    vy: 0,
     settled: false,
     bucket: -1,
     hitPeg: null,
@@ -108,15 +122,14 @@ export function spawnBall(world: World, rng: Rng): Ball {
 }
 
 export function bucketOf(world: World, x: number): number {
-  const i = Math.floor(x / world.cellW);
-  return Math.max(0, Math.min(world.rows, i));
+  return Math.max(0, Math.min(world.rows, Math.floor(x / world.cellW)));
 }
 
 /** Advances the ball by one frame (`dt` seconds), sub-stepping for stability. */
 export function step(world: World, ball: Ball, dt: number, rng: Rng): void {
   if (ball.settled) return;
   ball.hitPeg = null;
-  const g = world.height * GRAVITY_SCALE;
+  const g = world.height * world.tuning.gravity;
   const substeps = Math.max(1, Math.ceil(dt / MAX_SUBSTEP));
   const h = dt / substeps;
 
@@ -126,100 +139,84 @@ export function step(world: World, ball: Ball, dt: number, rng: Rng): void {
     ball.x += ball.vx * h;
     ball.y += ball.vy * h;
 
-    // Stable reference fall speed at this depth (independent of bounce wobble).
-    const depth = Math.max(ball.y - world.topMargin, world.rowGap);
-    const vRef = Math.sqrt(2 * g * depth);
-
-    collidePegs(world, ball, rng, vRef);
+    collidePegs(world, ball, rng);
     collideWalls(world, ball);
     collideFloor(world, ball);
 
-    // Bound horizontal speed to a fraction of the reference fall speed → each row
-    // is a ~half-cell step → centre-weighted spread (no centre-collapse, no edge-fling).
-    const maxVx = MAX_VX_OVER_VREF * vRef;
-    if (ball.vx > maxVx) ball.vx = maxVx;
-    else if (ball.vx < -maxVx) ball.vx = -maxVx;
-
-    if (ball.age > MAX_SIM_SECONDS) {
-      settle(world, ball);
-    }
+    if (ball.age > MAX_SIM_SECONDS) settle(world, ball);
   }
 }
 
-function collidePegs(world: World, ball: Ball, rng: Rng, vRef: number): void {
+function collidePegs(world: World, ball: Ball, rng: Rng): void {
+  const { restitution, friction, surfaceJitter } = world.tuning;
   const minDist = world.ballR + world.pegR;
   for (const peg of world.pegs) {
     const dy = ball.y - peg.y;
-    if (dy > minDist || dy < -minDist) continue; // cheap reject by row band
+    if (dy > minDist || dy < -minDist) continue;
     const dx = ball.x - peg.x;
     if (dx > minDist || dx < -minDist) continue;
     const distSq = dx * dx + dy * dy;
     if (distSq >= minDist * minDist) continue;
 
-    const dist = Math.sqrt(distSq) || 1e-6;
-    let nx = dx / dist;
-    let ny = dy / dist;
-    if (dist < 1e-5) {
-      nx = 0;
-      ny = -1;
-    }
-    // Push the ball out of the peg.
+    const dist = Math.sqrt(distSq);
+    let nx = dist > 1e-5 ? dx / dist : 0;
+    let ny = dist > 1e-5 ? dy / dist : -1;
+
+    // Random surface tilt: models peg/ball roughness and, crucially, breaks the
+    // head-on symmetry so the ball always deflects to one side (the ~50/50).
+    const a = (rng() - 0.5) * 2 * surfaceJitter;
+    const cos = Math.cos(a);
+    const sin = Math.sin(a);
+    [nx, ny] = [nx * cos - ny * sin, nx * sin + ny * cos];
+
+    // Push the ball out of the peg along the (tilted) normal.
     ball.x = peg.x + nx * minDist;
     ball.y = peg.y + ny * minDist;
 
-    const vn = ball.vx * nx + ball.vy * ny; // approaching if < 0
+    const vn = ball.vx * nx + ball.vy * ny; // < 0 ⇒ approaching
     if (vn < 0) {
-      const tx = -ny;
-      const ty = nx;
-      const vt = ball.vx * tx + ball.vy * ty;
-      const newVn = -vn * RESTITUTION;
-      // Mostly-fresh ~50/50 sideways kick (scaled to the fall speed) so the ball
-      // takes a ~half-cell step left or right off each peg.
-      const jitter = (rng() - 0.5) * vRef * PEG_JITTER;
-      const newVt = vt * TANGENT_FRICTION + jitter;
-      ball.vx = nx * newVn + tx * newVt;
-      ball.vy = ny * newVn + ty * newVt;
+      // Split into normal + tangential, bounce the normal, damp the tangent.
+      const tx = ball.vx - vn * nx;
+      const ty = ball.vy - vn * ny;
+      ball.vx = -vn * nx * restitution + tx * (1 - friction);
+      ball.vy = -vn * ny * restitution + ty * (1 - friction);
       ball.hitPeg = peg;
     }
   }
 }
 
 /**
- * Sloped side walls that follow the peg triangle (the board's frame): one cell
- * outside the outermost peg of each row. They funnel balls deflected outward
- * back into the pegs instead of letting them free-fall down the open corners to
- * the edge buckets — this is what makes the spread a centre-weighted bell.
+ * Sloped side walls following the peg triangle (the board frame): one cell
+ * outside the outermost peg of each row, so balls deflected outward are bounced
+ * back into the pegs rather than sliding down the open corners to the edges.
  */
 function collideWalls(world: World, ball: Ball): void {
   const r = world.ballR;
   const rf = Math.max(0, Math.min((ball.y - world.topMargin) / world.rowGap, world.rows - 1));
   const half = (rf / 2) * world.cellW;
-  const xL = world.width / 2 - half - world.cellW; // left frame edge at this depth
-  const xR = world.width / 2 + half + world.cellW; // right frame edge
+  const xL = world.width / 2 - half - world.cellW;
+  const xR = world.width / 2 + half + world.cellW;
   if (ball.x < xL + r) {
     ball.x = xL + r;
-    if (ball.vx < 0) ball.vx = -ball.vx * WALL_RESTITUTION;
+    if (ball.vx < 0) ball.vx = -ball.vx * world.tuning.wallRestitution;
   } else if (ball.x > xR - r) {
     ball.x = xR - r;
-    if (ball.vx > 0) ball.vx = -ball.vx * WALL_RESTITUTION;
+    if (ball.vx > 0) ball.vx = -ball.vx * world.tuning.wallRestitution;
   }
 }
 
 function collideFloor(world: World, ball: Ball): void {
   if (ball.y < world.floorY) return;
   ball.y = world.floorY;
-  if (ball.vy > 0) ball.vy = -ball.vy * FLOOR_RESTITUTION;
-  ball.vx *= FLOOR_FRICTION;
+  if (ball.vy > 0) ball.vy = -ball.vy * world.tuning.floorRestitution;
+  ball.vx *= world.tuning.floorFriction;
   const restSpeed = world.cellW * 0.6;
-  if (Math.abs(ball.vy) < restSpeed && Math.abs(ball.vx) < restSpeed) {
-    settle(world, ball);
-  }
+  if (Math.abs(ball.vy) < restSpeed && Math.abs(ball.vx) < restSpeed) settle(world, ball);
 }
 
 function settle(world: World, ball: Ball): void {
   ball.settled = true;
   ball.bucket = bucketOf(world, ball.x);
-  // Tidy the resting position to the bucket centre.
   ball.x = (ball.bucket + 0.5) * world.cellW;
   ball.y = world.floorY;
   ball.vx = 0;
@@ -227,8 +224,14 @@ function settle(world: World, ball: Ball): void {
 }
 
 /** Runs a full drop headlessly and returns the landed bucket. */
-export function simulateLanding(rows: number, width: number, height: number, rng: Rng): number {
-  const world = createWorld(rows, width, height);
+export function simulateLanding(
+  rows: number,
+  width: number,
+  height: number,
+  rng: Rng,
+  tuning: Tuning = DEFAULT_TUNING,
+): number {
+  const world = createWorld(rows, width, height, tuning);
   const ball = spawnBall(world, rng);
   const dt = 1 / 120;
   let t = 0;
