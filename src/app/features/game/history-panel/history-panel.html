@@ -1,0 +1,28 @@
+<h2 class="history-panel__title">Recent drops</h2>
+
+@if (results().length === 0) {
+  <p class="history-panel__empty">No drops yet — place a bet to start.</p>
+} @else {
+  <table class="history-panel__table">
+    <thead>
+      <tr>
+        <th scope="col">Time</th>
+        <th scope="col">Bet</th>
+        <th scope="col">×</th>
+        <th scope="col">Profit</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of results(); track row.id) {
+        <tr>
+          <td>{{ row.time | date: 'HH:mm:ss' }}</td>
+          <td>{{ row.bet | money }}</td>
+          <td>{{ row.multiplier }}×</td>
+          <td [class.is-loss]="row.win < 0" [class.is-win]="row.win >= 0">
+            {{ row.win | money }}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

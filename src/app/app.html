@@ -1,0 +1,18 @@
+<header class="app-bar">
+  <a class="app-bar__brand" routerLink="/game">◈ Plinko</a>
+  <nav class="app-bar__nav">
+    <a routerLink="/game" routerLinkActive="is-active">Game</a>
+    <a routerLink="/leaderboard" routerLinkActive="is-active">Leaderboard</a>
+  </nav>
+  @if (activePlayer(); as player) {
+    <div class="app-bar__player">
+      <span class="app-bar__name">{{ player.name }}</span>
+      <span class="app-bar__balance">{{ balance() | money }}</span>
+      <a class="app-bar__switch" routerLink="/">Switch</a>
+    </div>
+  }
+</header>
+
+<main class="app-main">
+  <router-outlet />
+</main>

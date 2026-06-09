@@ -1,0 +1,113 @@
+/* ===========================================================================
+   Plinko design tokens
+   =========================================================================== */
+:root {
+  color-scheme: dark;
+
+  /* Fonts */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Space Grotesk', var(--font-sans);
+
+  /* Surfaces & depth */
+  --bg: #0b0e16;
+  --bg-glow-1: #16203a;
+  --bg-glow-2: #1b1430;
+  --surface: #151a26;
+  --surface-2: #1b2230;
+  --surface-3: #222b3c;
+  --line: #2a3346;
+  --line-soft: #232b3a;
+
+  /* Text */
+  --text: #eaeefb;
+  --text-muted: #8b94a9;
+  --text-faint: #5e667b;
+
+  /* Brand & accents */
+  --gold: #ffd34d;
+  --gold-soft: #ffe39a;
+  --green: #34e08b;
+  --green-deep: #0a2c18;
+  --blue: #5b8cff;
+  --red: #ff6b81;
+  --violet: #a779ff;
+
+  /* Radii */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-pill: 999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.45);
+  --glow-green: 0 0 0 1px rgba(52, 224, 139, 0.35), 0 8px 28px rgba(52, 224, 139, 0.3);
+
+  /* Motion */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  background:
+    radial-gradient(900px 600px at 12% -8%, var(--bg-glow-1), transparent 60%),
+    radial-gradient(800px 600px at 100% 0%, var(--bg-glow-2), transparent 55%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
+
+/* Crisp, aligned numerals for money, multipliers and stats. */
+.num,
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Consistent, visible keyboard focus. */
+:where(button, a, input, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+::selection {
+  background: rgba(91, 140, 255, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

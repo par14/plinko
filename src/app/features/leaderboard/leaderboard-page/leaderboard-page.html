@@ -1,0 +1,30 @@
+<section class="leaderboard">
+  <h1 class="leaderboard__title">Leaderboard</h1>
+
+  @if (rows().length === 0) {
+    <p class="leaderboard__empty">No players yet.</p>
+  } @else {
+    <table class="leaderboard__table">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Player</th>
+          <th scope="col">Balance</th>
+          <th scope="col">Drops</th>
+          <th scope="col">Biggest win</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.player.id; let i = $index) {
+          <tr [class.is-active]="row.player.id === activeId()">
+            <td>{{ i + 1 }}</td>
+            <td>{{ row.player.name }}</td>
+            <td class="leaderboard__balance">{{ row.player.balance | money }}</td>
+            <td>{{ row.games }}</td>
+            <td>{{ row.biggestWin | money }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

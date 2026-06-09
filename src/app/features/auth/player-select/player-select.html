@@ -1,0 +1,52 @@
+<section class="player-select">
+  <h1 class="player-select__title">Plinko</h1>
+
+  <form class="player-select__form" (submit)="create(); $event.preventDefault()">
+    <h2>New player</h2>
+    <label>
+      <span>Name</span>
+      <input
+        type="text"
+        autocomplete="off"
+        [value]="name()"
+        (input)="name.set($any($event.target).value)"
+        required
+      />
+    </label>
+    <label>
+      <span>Starting balance</span>
+      <input
+        type="number"
+        min="1"
+        step="any"
+        [value]="startingBalance()"
+        (input)="startingBalance.set(+$any($event.target).value)"
+      />
+    </label>
+    <button type="submit" class="player-select__create">Start playing</button>
+  </form>
+
+  @if (all().length > 0) {
+    <div class="player-select__existing">
+      <h2>Resume</h2>
+      <ul>
+        @for (player of all(); track player.id) {
+          <li>
+            <button type="button" class="player-select__resume" (click)="resume(player.id)">
+              <span class="player-select__name">{{ player.name }}</span>
+              <span class="player-select__balance">{{ player.balance | money }}</span>
+            </button>
+            <button
+              type="button"
+              class="player-select__delete"
+              [attr.aria-label]="'Delete ' + player.name"
+              (click)="remove(player.id, $event)"
+            >
+              ✕
+            </button>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</section>

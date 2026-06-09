@@ -1,0 +1,24 @@
+<div class="board__stage">
+  <canvas #canvas class="board__canvas" aria-hidden="true"></canvas>
+</div>
+
+<div
+  class="board__buckets"
+  role="list"
+  aria-label="Payout multipliers"
+  [style.--cols]="buckets().length"
+>
+  @for (bucket of buckets(); track $index) {
+    <div
+      class="board__bucket"
+      role="listitem"
+      [class.board__bucket--hit]="landedBucket() === $index"
+      [style.background]="bucket.color"
+      [attr.aria-label]="bucket.multiplier + ' times payout'"
+    >
+      {{ bucket.multiplier }}×
+    </div>
+  }
+</div>
+
+<p class="board__live" aria-live="polite">{{ liveMessage() }}</p>

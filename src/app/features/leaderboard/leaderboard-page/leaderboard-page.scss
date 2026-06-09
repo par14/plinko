@@ -1,0 +1,65 @@
+.leaderboard {
+  max-width: 760px;
+  margin: 2.5rem auto;
+  padding: 1.5rem;
+}
+
+.leaderboard__title {
+  margin: 0 0 1.25rem;
+  font-size: 1.9rem;
+  background: linear-gradient(120deg, var(--gold-soft), var(--gold));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.leaderboard__empty {
+  color: var(--text-muted);
+}
+
+.leaderboard__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.leaderboard__table th,
+.leaderboard__table td {
+  padding: 0.8rem 1rem;
+  text-align: left;
+}
+
+.leaderboard__table th {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.leaderboard__table td {
+  border-top: 1px solid var(--line-soft);
+  color: var(--text);
+}
+
+.leaderboard__table tbody tr:first-child td {
+  font-weight: 600;
+}
+
+.leaderboard__table tbody tr:first-child td:first-child {
+  color: var(--gold);
+}
+
+.leaderboard__balance {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.leaderboard__table tr.is-active td {
+  background: rgba(91, 140, 255, 0.16);
+}

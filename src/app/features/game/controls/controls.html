@@ -1,0 +1,81 @@
+<div class="controls__row controls__row--balance">
+  <span class="controls__label">Balance</span>
+  <span class="controls__balance">{{ balance() | money }}</span>
+  <button
+    type="button"
+    class="controls__mute"
+    [attr.aria-pressed]="isMuted()"
+    (click)="toggleMute()"
+  >
+    {{ isMuted() ? '🔇' : '🔊' }}
+  </button>
+</div>
+
+<label class="controls__field">
+  <span class="controls__label">Bet</span>
+  <input
+    class="controls__bet"
+    type="number"
+    min="1"
+    step="any"
+    inputmode="decimal"
+    [value]="bet()"
+    (input)="onBetInput($any($event.target).value)"
+  />
+</label>
+
+<div class="controls__quick" role="group" aria-label="Quick bet">
+  <button type="button" (click)="betMin()">min</button>
+  <button type="button" (click)="betHalf()">½</button>
+  <button type="button" (click)="betDouble()">2×</button>
+  <button type="button" (click)="betMax()">max</button>
+</div>
+
+<div class="controls__field">
+  <span class="controls__label">Risk</span>
+  <div class="controls__segmented" role="group" aria-label="Risk mode">
+    @for (mode of riskModes; track mode) {
+      <button
+        type="button"
+        [class.is-active]="risk() === mode"
+        [attr.aria-pressed]="risk() === mode"
+        (click)="selectRisk(mode)"
+      >
+        {{ mode }}
+      </button>
+    }
+  </div>
+</div>
+
+<label class="controls__field">
+  <span class="controls__label">Rows</span>
+  <select
+    class="controls__select"
+    [value]="rows()"
+    (change)="selectRows(+$any($event.target).value)"
+  >
+    @for (option of rowsOptions; track option) {
+      <option [value]="option">{{ option }}</option>
+    }
+  </select>
+</label>
+
+<button
+  type="button"
+  class="controls__play"
+  [disabled]="!canPlay()"
+  (click)="play()"
+>
+  Drop ball
+</button>
+
+<div class="controls__status">
+  @if (lastWin() !== null) {
+    <span class="controls__win" [class.controls__win--loss]="(lastWin() ?? 0) < 0">
+      Last: {{ lastWin() | money }}
+    </span>
+  }
+  @if (activeBalls() > 0) {
+    <span class="controls__active">{{ activeBalls() }} in play</span>
+  }
+</div>

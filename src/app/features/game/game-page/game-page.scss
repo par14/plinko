@@ -1,0 +1,39 @@
+.game-page {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 1fr;
+  align-items: start;
+  padding: 1.25rem;
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+.game-page__controls {
+  order: 2;
+}
+
+.game-page__board {
+  order: 1;
+}
+
+.game-page__history {
+  order: 3;
+}
+
+@media (min-width: 900px) {
+  .game-page {
+    grid-template-columns: 320px minmax(360px, 1fr) 320px;
+  }
+
+  .game-page__controls {
+    order: 1;
+  }
+
+  .game-page__board {
+    order: 2;
+  }
+
+  .game-page__history {
+    order: 3;
+  }
+}
