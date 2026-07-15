@@ -1,17 +1,17 @@
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AudioService } from '../core/audio/audio.service';
 import { MemoryPlinkoStore } from '../core/db/plinko-db';
 import { PLINKO_STORE } from '../core/db/plinko-store.token';
-import { multiplierFor } from '../core/fairness/multipliers';
+import type { BallDrop } from './game.service';
 import { GameService } from './game.service';
 import { GameConfigStore } from './game-config.store';
 import { HistoryStore } from './history.store';
 import { PlayersStore } from './players.store';
 
-// Stub audio so jsdom's unimplemented HTMLMediaElement.play() stays quiet.
 const audioStub: Partial<AudioService> = {
   playDrop: () => undefined,
+  playPegHit: () => undefined,
   playBucket: () => undefined,
   unlock: () => undefined,
 };
@@ -34,51 +34,88 @@ function setup() {
 describe('GameService', () => {
   beforeEach(() => localStorage.clear());
 
-  it('debits the stake and credits the payout for the bucket the board reports', () => {
+  it('settles the predetermined outcome and persists its proof', async () => {
     const { game, players, config, history } = setup();
     players.addPlayer('Ada', 100);
     config.setBet(10);
     config.setRows(8);
-    config.setRisk('low');
-    // Board stub: report that the ball landed in bucket 0 (8-row low = 5.6×).
-    game.registerLauncher((_drop, onLand) => onLand(0));
+    await vi.waitFor(() => expect(game.canPlay()).toBe(true));
+    let launched: BallDrop | undefined;
+    game.registerLauncher((drop, onLand) => {
+      launched = drop;
+      onLand();
+      onLand();
+    });
 
-    game.play();
+    await game.play();
 
-    const expectedMultiplier = multiplierFor(8, 'low', 0);
     const settled = history.results()[0];
-    expect(settled.bucketIndex).toBe(0);
-    expect(settled.multiplier).toBe(expectedMultiplier);
-    expect(settled.payout).toBeCloseTo(10 * expectedMultiplier, 2);
-    expect(settled.win).toBeCloseTo(10 * expectedMultiplier - 10, 2);
-    // balance = 100 - 10 (stake) + payout
+    expect(settled.bucketIndex).toBe(launched?.outcome.bucketIndex);
+    expect(settled.multiplier).toBe(launched?.multiplier);
+    expect(settled.payout).toBeCloseTo(10 * settled.multiplier, 2);
+    expect(settled.fairnessProof?.serverSeedHash).not.toBe('');
     expect(players.balance()).toBeCloseTo(90 + settled.payout, 2);
     expect(config.activeBalls()).toBe(0);
+    expect(history.results()).toHaveLength(1);
   });
 
-  it('refuses to play when the bet exceeds the balance', () => {
+  it('refuses to play when the bet exceeds the balance', async () => {
     const { game, players, config, history } = setup();
     players.addPlayer('Ada', 5);
     config.setBet(50);
-    game.registerLauncher((_drop, onLand) => onLand(4));
-    expect(game.canPlay()).toBe(false);
-
-    game.play();
+    await game.play();
     expect(players.balance()).toBe(5);
     expect(history.results()).toHaveLength(0);
   });
 
-  it('records a result within a valid bucket range', () => {
+  it('reserves the stake before the asynchronous outcome completes', async () => {
+    const { game, players, config } = setup();
+    players.addPlayer('Ada', 10);
+    config.setBet(10);
+    await vi.waitFor(() => expect(game.canPlay()).toBe(true));
+    game.registerLauncher(() => undefined);
+
+    const playing = game.play();
+    expect(players.balance()).toBe(0);
+    expect(game.canPlay()).toBe(false);
+    await playing;
+  });
+
+  it('credits the player who launched the ball even after switching profiles', async () => {
     const { game, players, config, history } = setup();
+    const ada = players.addPlayer('Ada', 100);
+    const grace = players.addPlayer('Grace', 200);
+    players.selectPlayer(ada.id);
+    config.setBet(10);
+    await vi.waitFor(() => expect(game.canPlay()).toBe(true));
+
+    let land: (() => void) | undefined;
+    let launched: BallDrop | undefined;
+    game.registerLauncher((drop, onLand) => {
+      launched = drop;
+      land = onLand;
+    });
+    await game.play();
+    players.selectPlayer(grace.id);
+    land?.();
+
+    const adaBalance = players.players().find((player) => player.id === ada.id)?.balance;
+    expect(adaBalance).toBeCloseTo(90 + 10 * launched!.multiplier, 2);
+    expect(players.balance()).toBe(200);
+    expect(history.results()).toEqual([]);
+  });
+
+  it('refunds the original player when launching the animation throws', async () => {
+    const { game, players, config } = setup();
     players.addPlayer('Ada', 100);
-    config.setBet(1);
-    config.setRows(12);
-    game.registerLauncher((_drop, onLand) => onLand(6));
+    config.setBet(10);
+    await vi.waitFor(() => expect(game.canPlay()).toBe(true));
+    game.registerLauncher(() => {
+      throw new Error('renderer failed');
+    });
 
-    game.play();
-
-    const result = history.results()[0];
-    expect(result.bucketIndex).toBeGreaterThanOrEqual(0);
-    expect(result.bucketIndex).toBeLessThanOrEqual(result.rows);
+    await expect(game.play()).rejects.toThrow('renderer failed');
+    expect(players.balance()).toBe(100);
+    expect(config.activeBalls()).toBe(0);
   });
 });

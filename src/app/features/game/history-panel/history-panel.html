@@ -10,6 +10,7 @@
         <th scope="col">Bet</th>
         <th scope="col">×</th>
         <th scope="col">Profit</th>
+        <th scope="col">Fairness</th>
       </tr>
     </thead>
     <tbody>
@@ -20,6 +21,54 @@
           <td>{{ row.multiplier }}×</td>
           <td [class.is-loss]="row.win < 0" [class.is-win]="row.win >= 0">
             {{ row.win | money }}
+          </td>
+          <td>
+            @if (row.fairnessProof; as proof) {
+              <details class="history-panel__proof">
+                <summary>Proof</summary>
+                <dl>
+                  <div>
+                    <dt>Commitment</dt>
+                    <dd>{{ proof.serverSeedHash }}</dd>
+                  </div>
+                  <div>
+                    <dt>Server seed</dt>
+                    <dd>{{ proof.serverSeed }}</dd>
+                  </div>
+                  <div>
+                    <dt>Client seed</dt>
+                    <dd>{{ proof.clientSeed }}</dd>
+                  </div>
+                  <div>
+                    <dt>Nonce</dt>
+                    <dd>{{ proof.nonce }}</dd>
+                  </div>
+                  <div>
+                    <dt>Path</dt>
+                    <dd>{{ proof.path.join('') }}</dd>
+                  </div>
+                </dl>
+                <button
+                  type="button"
+                  (click)="verify(row)"
+                  [disabled]="verification()[row.id] === 'checking'"
+                >
+                  {{ verification()[row.id] === 'checking' ? 'Checking…' : 'Verify' }}
+                </button>
+                @if (verification()[row.id]; as status) {
+                  @if (status !== 'checking') {
+                    <span
+                      [class.is-win]="status === 'valid'"
+                      [class.is-loss]="status === 'invalid'"
+                    >
+                      {{ status === 'valid' ? 'Valid' : 'Invalid' }}
+                    </span>
+                  }
+                }
+              </details>
+            } @else {
+              <span title="Created before fairness proofs were introduced">Legacy</span>
+            }
           </td>
         </tr>
       }

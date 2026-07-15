@@ -1,5 +1,12 @@
 import { computed, inject } from '@angular/core';
-import { patchState, signalStore, withComputed, withHooks, withMethods, withState } from '@ngrx/signals';
+import {
+  patchState,
+  signalStore,
+  withComputed,
+  withHooks,
+  withMethods,
+  withState,
+} from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { from, of, pipe, switchMap, tap } from 'rxjs';
 import { PLINKO_STORE } from '../core/db/plinko-store.token';
@@ -26,7 +33,7 @@ export const HistoryStore = signalStore(
       return counts;
     }),
   })),
-  withMethods((store, db = inject(PLINKO_STORE)) => ({
+  withMethods((store, db = inject(PLINKO_STORE), players = inject(PlayersStore)) => ({
     _loadFor: rxMethod<string | null>(
       pipe(
         switchMap((playerId) =>
@@ -36,9 +43,11 @@ export const HistoryStore = signalStore(
       ),
     ),
     addResult(result: GameResult): void {
-      patchState(store, (s) => ({
-        results: [result, ...s.results].slice(0, HISTORY_CAP),
-      }));
+      if (players.activePlayerId() === result.playerId) {
+        patchState(store, (s) => ({
+          results: [result, ...s.results].slice(0, HISTORY_CAP),
+        }));
+      }
       void db.addResult(result);
     },
     clear(playerId: string): void {

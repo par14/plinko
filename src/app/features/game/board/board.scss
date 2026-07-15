@@ -1,7 +1,7 @@
 :host {
   display: block;
   width: 100%;
-  max-width: 580px;
+  max-width: var(--board-max-width, 580px);
   margin-inline: auto;
 }
 
@@ -26,9 +26,20 @@
   aspect-ratio: 1 / 1;
 }
 
+.board__fallback {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: min(80%, 24rem);
+  margin: 0;
+  transform: translate(-50%, -50%);
+  color: var(--text-muted, #b9c1d2);
+  line-height: 1.45;
+  text-align: center;
+}
+
 .board__buckets {
   display: grid;
-  grid-template-columns: repeat(var(--cols, 1), 1fr);
+  grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
   gap: 3px;
   margin-top: 8px;
   /* Match the stage's inner padding so buckets line up under the pegs. */
@@ -36,13 +47,14 @@
 }
 
 .board__bucket {
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   padding-block: 6px;
   border-radius: 6px 6px 7px 7px;
   font-family: var(--font-display);
-  font-size: clamp(0.5rem, 1.7vw, 0.82rem);
+  font-size: clamp(0.5rem, 1.15vw, 0.82rem);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: #14130a;
@@ -50,7 +62,11 @@
   box-shadow:
     0 2px 0 rgba(0, 0, 0, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  transition: transform 0.14s var(--ease), filter 0.14s var(--ease), box-shadow 0.14s var(--ease);
+  transition:
+    transform 0.14s var(--ease),
+    filter 0.14s var(--ease),
+    box-shadow 0.14s var(--ease);
+  overflow: hidden;
 }
 
 .board__bucket--hit {

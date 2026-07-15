@@ -1,5 +1,10 @@
 <div class="board__stage">
   <canvas #canvas class="board__canvas" aria-hidden="true"></canvas>
+  @if (sceneUnavailable()) {
+    <p class="board__fallback" role="status">
+      3D animation is unavailable. Drops will still be calculated and paid normally.
+    </p>
+  }
 </div>
 
 <div
@@ -12,7 +17,7 @@
     <div
       class="board__bucket"
       role="listitem"
-      [class.board__bucket--hit]="landedBucket() === $index"
+      [class.board__bucket--hit]="highlightedBuckets().has($index)"
       [style.background]="bucket.color"
       [attr.aria-label]="bucket.multiplier + ' times payout'"
     >

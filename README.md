@@ -13,7 +13,7 @@ A modern, **provably-fair** Plinko game built with **Angular 21** — drop the b
 - **Multiple players** — create profiles, switch between them, each with its own balance and history.
 - **Leaderboard** — players ranked by balance, with drops played and biggest win.
 - **Persistent** — players and results are stored in **IndexedDB** (with an in-memory fallback for private mode), surviving reloads.
-- **Custom canvas animation** — no physics library; a lightweight `requestAnimationFrame` animator renders a believable ball path into the predetermined bucket and **idles when no ball is in flight**.
+- **2.5D physics board** — Three.js renders the board while Rapier handles CCD collisions, spin, walls, pins, and bucket dividers. Seeded guidance keeps the physical animation aligned with the committed outcome.
 - **Fully responsive** — one resolution-independent code path scales from phone to desktop.
 - **Accessible** — keyboard focus, `aria-live` win announcements, `prefers-reduced-motion` support, and 44px touch targets.
 
@@ -26,7 +26,7 @@ The key design decision is **decoupling the outcome from the animation**:
 1. A per-session secret `serverSeed` + a `clientSeed` + an incrementing `nonce` are fed into `HMAC-SHA256` to produce a deterministic bit stream.
 2. Each bit is a left/right decision at one peg row. The **bucket index = number of right moves**, which is a true `Binomial(rows, 0.5)` distribution.
 3. The multiplier table maps that bucket to a payout. Because the distribution is exact, the expected return (RTP) is provable — the ported tables yield ~99%.
-4. The canvas animation simply *plays back* the decided path; the physics is cosmetic.
+4. The Rapier simulation follows the decided path with bounded contact guidance; the payout never depends on frame rate, viewport size, or physics tuning.
 
 `verifyOutcome()` recomputes any stored result from its seed + nonce, so a player can audit history. See [`src/app/core/fairness/`](src/app/core/fairness).
 
@@ -34,27 +34,27 @@ The key design decision is **decoupling the outcome from the animation**:
 
 ## 🛠 Tech stack
 
-| Concern | Choice |
-| --- | --- |
-| Framework | Angular 21 (standalone, **zoneless**, `OnPush`) |
-| Reactivity | Signals + **NgRx Signal Store** (`@ngrx/signals`) |
+| Concern     | Choice                                                      |
+| ----------- | ----------------------------------------------------------- |
+| Framework   | Angular 21 (standalone, **zoneless**, `OnPush`)             |
+| Reactivity  | Signals + **NgRx Signal Store** (`@ngrx/signals`)           |
 | Persistence | IndexedDB via [`idb`](https://github.com/jakearchibald/idb) |
-| Rendering | Canvas 2D + `requestAnimationFrame` (no physics lib) |
-| Crypto | Web Crypto (`crypto.subtle` HMAC-SHA256) |
-| Testing | Vitest (`@angular/build:unit-test`) + `fake-indexeddb` |
-| Fonts | Inter (UI, tabular numerals) + Space Grotesk (display) |
+| Rendering   | Three.js + Rapier 3D constrained to a 2.5D play plane       |
+| Crypto      | Web Crypto (`crypto.subtle` HMAC-SHA256)                    |
+| Testing     | Vitest (`@angular/build:unit-test`) + `fake-indexeddb`      |
+| Fonts       | Inter (UI, tabular numerals) + Space Grotesk (display)      |
 
 ---
 
 ## 🚀 Getting started
 
-**Prerequisites:** Node.js 20+ and npm.
+**Prerequisites:** Node.js 22.22+ and pnpm 11.
 
 ```bash
-npm install         # install dependencies
-npm start           # dev server at http://localhost:4200
-npm run build       # production build → dist/
-npm test            # run the unit suite (Vitest)
+pnpm install        # install dependencies
+pnpm start          # dev server at http://localhost:4200
+pnpm build          # production build → dist/
+pnpm test           # run the unit suite (Vitest)
 ```
 
 ---
@@ -98,7 +98,7 @@ The fairness specs run in the Node test environment so Web Crypto is available.
 ## ⚡ Performance
 
 - **Lazy-loaded routes** keep the initial bundle small (~75 kB transferred).
-- The canvas loop **only runs while a ball is animating** — the board is static between drops, so the CPU/GPU idle at rest (important for battery on mobile).
+- The render/physics loop **only runs while a ball or collision flash is active** — the board is static between drops.
 - Capped `devicePixelRatio` (≤ 2.5) avoids oversized backing stores on high-DPI screens.
 - `OnPush` everywhere; canvas pixels are invisible to change detection.
 

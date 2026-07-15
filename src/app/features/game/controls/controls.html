@@ -4,6 +4,8 @@
   <button
     type="button"
     class="controls__mute"
+    [attr.aria-label]="isMuted() ? 'Enable sound' : 'Mute sound'"
+    [attr.title]="isMuted() ? 'Enable sound' : 'Mute sound'"
     [attr.aria-pressed]="isMuted()"
     (click)="toggleMute()"
   >
@@ -33,12 +35,18 @@
 
 <div class="controls__field">
   <span class="controls__label">Risk</span>
-  <div class="controls__segmented" role="group" aria-label="Risk mode">
+  <div
+    class="controls__segmented"
+    role="group"
+    aria-label="Risk mode"
+    [attr.aria-describedby]="configurationLocked() ? 'configuration-lock' : null"
+  >
     @for (mode of riskModes; track mode) {
       <button
         type="button"
         [class.is-active]="risk() === mode"
         [attr.aria-pressed]="risk() === mode"
+        [disabled]="configurationLocked()"
         (click)="selectRisk(mode)"
       >
         {{ mode }}
@@ -52,6 +60,8 @@
   <select
     class="controls__select"
     [value]="rows()"
+    [disabled]="configurationLocked()"
+    [attr.aria-describedby]="configurationLocked() ? 'configuration-lock' : null"
     (change)="selectRows(+$any($event.target).value)"
   >
     @for (option of rowsOptions; track option) {
@@ -60,12 +70,7 @@
   </select>
 </label>
 
-<button
-  type="button"
-  class="controls__play"
-  [disabled]="!canPlay()"
-  (click)="play()"
->
+<button type="button" class="controls__play" [disabled]="!canPlay()" (click)="play()">
   Drop ball
 </button>
 
@@ -79,3 +84,15 @@
     <span class="controls__active">{{ activeBalls() }} in play</span>
   }
 </div>
+
+@if (configurationLocked()) {
+  <p id="configuration-lock" class="controls__lock-hint">
+    Risk and rows unlock when all balls land.
+  </p>
+}
+
+@if (nextCommitment()) {
+  <p class="controls__commitment" title="SHA-256 commitment for the next drop">
+    Next proof: <code>{{ nextCommitment().slice(0, 12) }}…</code>
+  </p>
+}

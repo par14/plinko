@@ -9,6 +9,16 @@
   box-shadow: var(--shadow-md);
 }
 
+.controls__commitment {
+  margin: 0.6rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+
+  code {
+    font-size: inherit;
+  }
+}
+
 .controls__row,
 .controls__field {
   display: flex;
@@ -47,7 +57,9 @@
   font-size: 1.05rem;
   cursor: pointer;
   opacity: 0.8;
-  transition: opacity 0.15s var(--ease), transform 0.15s var(--ease);
+  transition:
+    opacity 0.15s var(--ease),
+    transform 0.15s var(--ease);
 }
 
 .controls__mute:hover {
@@ -65,7 +77,9 @@
   color: var(--text);
   font-size: 1rem;
   font-variant-numeric: tabular-nums;
-  transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+  transition:
+    border-color 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
 }
 
 .controls__bet:focus,
@@ -91,17 +105,20 @@
   font-weight: 600;
   cursor: pointer;
   text-transform: capitalize;
-  transition: background 0.15s var(--ease), color 0.15s var(--ease), transform 0.08s var(--ease);
+  transition:
+    background 0.15s var(--ease),
+    color 0.15s var(--ease),
+    transform 0.08s var(--ease);
 }
 
-.controls__quick button:hover,
-.controls__segmented button:hover {
+.controls__quick button:hover:not(:disabled),
+.controls__segmented button:hover:not(:disabled) {
   color: var(--text);
   background: var(--line);
 }
 
-.controls__quick button:active,
-.controls__segmented button:active {
+.controls__quick button:active:not(:disabled),
+.controls__segmented button:active:not(:disabled) {
   transform: translateY(1px);
 }
 
@@ -119,6 +136,16 @@
   box-shadow: 0 4px 14px rgba(91, 140, 255, 0.35);
 }
 
+.controls__segmented button:disabled,
+.controls__select:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.controls__segmented button.is-active:disabled {
+  opacity: 0.82;
+}
+
 .controls__play {
   margin-top: 0.25rem;
   padding: 0.95rem;
@@ -132,7 +159,10 @@
   letter-spacing: 0.01em;
   cursor: pointer;
   box-shadow: var(--glow-green);
-  transition: transform 0.1s var(--ease), filter 0.15s var(--ease), box-shadow 0.15s var(--ease);
+  transition:
+    transform 0.1s var(--ease),
+    filter 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
 }
 
 .controls__play:hover:not(:disabled) {
@@ -167,4 +197,10 @@
 
 .controls__win--loss {
   color: var(--red);
+}
+
+.controls__lock-hint {
+  margin: -0.45rem 0 0;
+  color: var(--text-faint);
+  font-size: 0.72rem;
 }

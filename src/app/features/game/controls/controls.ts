@@ -1,5 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { RISK_MODES, ROWS_OPTIONS, type RiskMode, type Rows } from '../../../core/fairness/multipliers';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+  RISK_MODES,
+  ROWS_OPTIONS,
+  type RiskMode,
+  type Rows,
+} from '../../../core/fairness/multipliers';
 import { AudioService } from '../../../core/audio/audio.service';
 import { GameConfigStore, MIN_BET } from '../../../state/game-config.store';
 import { GameService } from '../../../state/game.service';
@@ -28,6 +33,8 @@ export class Controls {
   readonly risk = this.config.risk;
   readonly lastWin = this.config.lastWin;
   readonly activeBalls = this.config.activeBalls;
+  readonly nextCommitment = this.config.serverSeedHash;
+  readonly configurationLocked = computed(() => this.activeBalls() > 0);
   readonly balance = this.players.balance;
   readonly canPlay = this.game.canPlay;
   readonly isMuted = this.audio.isMuted;
@@ -54,10 +61,12 @@ export class Controls {
   }
 
   selectRows(rows: number): void {
+    if (this.configurationLocked()) return;
     this.config.setRows(rows as Rows);
   }
 
   selectRisk(risk: RiskMode): void {
+    if (this.configurationLocked()) return;
     this.config.setRisk(risk);
   }
 

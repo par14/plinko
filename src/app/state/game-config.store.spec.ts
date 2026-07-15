@@ -18,6 +18,11 @@ describe('GameConfigStore', () => {
     expect(store.bet()).toBe(12.5);
     expect(store.rows()).toBe(12);
     expect(store.risk()).toBe('high');
+    expect(JSON.parse(localStorage.getItem('plinko.config') ?? '{}')).toEqual({
+      bet: 12.5,
+      rows: 12,
+      risk: 'high',
+    });
   });
 
   it('caps a fractional bet at the available balance and never below MIN_BET', () => {
@@ -38,5 +43,18 @@ describe('GameConfigStore', () => {
     store.removeBall();
     store.removeBall();
     expect(store.activeBalls()).toBe(0);
+  });
+
+  it('replaces invalid saved switch values with supported defaults', () => {
+    localStorage.setItem(
+      'plinko.config',
+      JSON.stringify({ bet: 'broken', rows: 99, risk: 'impossible' }),
+    );
+
+    const store = setup();
+
+    expect(store.bet()).toBe(1);
+    expect(store.rows()).toBe(8);
+    expect(store.risk()).toBe('low');
   });
 });

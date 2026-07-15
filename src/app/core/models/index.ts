@@ -1,4 +1,5 @@
 import type { RiskMode, Rows } from '../fairness/multipliers';
+import type { Direction } from '../fairness/outcome';
 
 export type { RiskMode, Rows } from '../fairness/multipliers';
 
@@ -22,5 +23,14 @@ export interface GameResult {
   payout: number;
   /** Net profit/loss = payout - bet. */
   win: number;
+  /** Missing on results created before the deterministic fairness engine. */
+  fairnessProof?: {
+    version: 1;
+    serverSeed: string;
+    serverSeedHash: string;
+    clientSeed: string;
+    nonce: number;
+    path: Direction[];
+  };
   time: number;
 }

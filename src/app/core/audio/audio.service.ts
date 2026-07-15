@@ -8,7 +8,7 @@ function bucketSound(multiplier: number): string {
   return 'holeLow';
 }
 
-const POOL_SIZE = 4;
+const POOL_SIZE = 10;
 
 /**
  * Plays short game sounds. Elements are pooled per source so many concurrent
@@ -30,11 +30,25 @@ export class AudioService {
   /** Call from the first user gesture to satisfy autoplay policies. */
   unlock(): void {
     if (this.muted()) return;
-    this.borrow('sounds/ball.wav');
+    const audio = this.borrow('sounds/ball.wav');
+    if (!audio) return;
+    audio.volume = 0;
+    void audio
+      .play()
+      ?.then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+      })
+      .catch(() => undefined);
   }
 
   playDrop(): void {
     this.play('sounds/ball.wav', 0.2);
+  }
+
+  playPegHit(intensity = 1): void {
+    const volume = 0.07 + Math.max(0, Math.min(1, intensity)) * 0.11;
+    this.play('sounds/ball.wav', volume);
   }
 
   playBucket(multiplier: number): void {

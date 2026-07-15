@@ -37,6 +37,18 @@ describe('PlayersStore', () => {
     const grace = store.addPlayer('Grace', 500);
     store.selectPlayer(grace.id);
     expect(store.balance()).toBe(500);
+    expect(localStorage.getItem('plinko.activePlayerId')).toBe(grace.id);
+  });
+
+  it('adjusts a specific player without changing the active profile', () => {
+    const store = setup();
+    const ada = store.addPlayer('Ada', 100);
+    const grace = store.addPlayer('Grace', 500);
+    store.adjustPlayerBalance(ada.id, 25);
+
+    expect(store.activePlayerId()).toBe(grace.id);
+    expect(store.balance()).toBe(500);
+    expect(store.players().find((player) => player.id === ada.id)?.balance).toBe(125);
   });
 
   it('clears the active player when it is deleted', () => {
